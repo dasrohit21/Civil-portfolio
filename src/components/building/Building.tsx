@@ -3,8 +3,9 @@
 import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
-import { clocks } from "@/lib/store";
-import { FLOOR_COUNT, PLINTH, ROOF, T, cages, parts, type Mat, type Part } from "./model";
+import { clocks, useStore } from "@/lib/store";
+import { FLOOR_COUNT, PLINTH, ROOF, T, buildingParts, cages, siteParts, type Mat, type Part } from "./model";
+import { envelope, stressAt } from "./StressTest";
 
 const clamp01 = (n: number) => Math.min(1, Math.max(0, n));
 const easeOut = (k: number) => 1 - Math.pow(1 - k, 3);
@@ -68,9 +69,21 @@ function geometryOf(p: Part) {
   }
 }
 
-/** One part of the building, appearing at its moment in the build. */
-function PartMesh({ p, material }: { p: Part; material: THREE.Material }) {
+/** Stress colours for "Try to break it", low to high. */
+const HEAT = ["#2b6cb0", "#2aa3b8", "#3fae6b", "#e6c229", "#ef8a2c", "#d6452f"];
+/** The parts that carry load, and so show their stress. */
+const STRUCTURAL = new Set<Mat>(["concrete", "foundation", "terracotta"]);
+
+function useHeatMaterials() {
+  const heat = useMemo(() => HEAT.map((color) => new THREE.MeshStandardMaterial({ color, roughness: 0.7, emissive: color, emissiveIntensity: 0.25 })), []);
+  useEffect(() => () => heat.forEach((m) => m.dispose()), [heat]);
+  return heat;
+}
+
+/** One part of the building, appearing at its moment in the build. Structural parts show their stress during a test. */
+function PartMesh({ p, material, heat }: { p: Part; material: THREE.Material; heat?: THREE.Material[] }) {
   const group = useRef<THREE.Group>(null);
+  const mesh = useRef<THREE.Mesh>(null);
   const { geo, lift } = geometryOf(p);
   const opaque = !(material as THREE.MeshStandardMaterial).transparent;
 
@@ -84,11 +97,17 @@ function PartMesh({ p, material }: { p: Part; material: THREE.Material }) {
     else if (p.anim === "spread") g.scale.set(e, 1, e);
     else if (p.anim === "pop") g.scale.setScalar(Math.max(0.001, backOut(k)));
     else g.position.y = p.at[1] + (1 - easeOut(k)) * 1.8;
+
+    if (heat && mesh.current) {
+      const test = useStore.getState().test;
+      const s = test ? stressAt(test, p.at[0], p.at[1] + lift) : 0;
+      mesh.current.material = test && s > 0.04 ? heat[Math.min(heat.length - 1, Math.round(s * (heat.length - 1)))] : material;
+    }
   });
 
   return (
     <group ref={group} position={p.at} visible={false}>
-      <mesh position={[0, lift, 0]} rotation={p.rot} material={material} castShadow={opaque} receiveShadow={opaque}>
+      <mesh ref={mesh} position={[0, lift, 0]} rotation={p.rot} material={material} castShadow={opaque} receiveShadow={opaque}>
         {geo}
       </mesh>
     </group>
@@ -178,15 +197,38 @@ function ScanBeam() {
   );
 }
 
+/** The building sways in an earthquake, leans in the wind and settles a hair under load. */
+function useSway() {
+  const structure = useRef<THREE.Group>(null);
+  useFrame(() => {
+    const g = structure.current;
+    if (!g) return;
+    const test = useStore.getState().test;
+    const env = test ? envelope() : 0;
+    const t = clocks.test;
+    g.position.x = test === "quake" ? Math.sin(t * 16) * 0.07 * env : 0;
+    g.rotation.z = test === "wind" ? -0.014 * env * (1 + 0.3 * Math.sin(t * 2.5)) : 0;
+    g.scale.y = test === "load" ? 1 - 0.008 * env : 1;
+  });
+  return structure;
+}
+
 export function Building() {
   const mats = useMaterials();
+  const heat = useHeatMaterials();
+  const structure = useSway();
   return (
     <group>
       <Plinth />
-      {parts.map((p, i) => (
+      <group ref={structure}>
+        {buildingParts.map((p, i) => (
+          <PartMesh key={i} p={p} material={mats[p.mat]} heat={STRUCTURAL.has(p.mat) ? heat : undefined} />
+        ))}
+        <Cages />
+      </group>
+      {siteParts.map((p, i) => (
         <PartMesh key={i} p={p} material={mats[p.mat]} />
       ))}
-      <Cages />
       <ScanBeam />
     </group>
   );

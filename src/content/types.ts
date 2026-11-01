@@ -13,6 +13,21 @@ export type Education = { degree: string; school: string; note?: string; score: 
 
 export type HotspotId = "hut" | "foundation" | "structure" | "audit" | "green" | "vastu" | "solar";
 
+export type StressTestId = "load" | "quake" | "wind" | "flood";
+
+/** One of the "Try to break it" tests. */
+export type StressTest = {
+  id: StressTestId;
+  label: string;
+  icon: string;
+  /** Shown while the test runs. */
+  running: string;
+  /** Shown once the building has held. */
+  result: string;
+  /** The part of the building that explains why it held. */
+  hotspot: HotspotId;
+};
+
 /** One part of the building you can open. */
 export type Hotspot = {
   id: HotspotId;

@@ -121,7 +121,8 @@ function skin(): Part[] {
 const SOLAR_X = [-2.2, -0.75, 0.75, 2.2];
 const SOLAR_Z = [-1.3, 0, 1.3];
 
-function roofAndSite(): Part[] {
+/** Things fixed to the building: the roof's solar panels, the NDT scanner and the green plaque. */
+function fittings(): Part[] {
   const parts: Part[] = [];
   // Solar panels, tilted to face the sun (and the camera)
   let i = 0;
@@ -131,9 +132,14 @@ function roofAndSite(): Part[] {
   // NDT scanner on the right face
   parts.push({ shape: "box", at: [3.12, 2.35, 0.9], size: [0.14, 0.32, 0.42], mat: "scanner", anim: "pop", start: T.site + 0.4, dur: 0.3 });
   parts.push({ shape: "sphere", at: [3.2, 2.6, 1.0], size: [0.04, 0, 0], mat: "led", anim: "pop", start: T.site + 0.5, dur: 0.2 });
-  // Forecourt, green plaque and the Vastu compass
-  parts.push({ shape: "box", at: [0, 0, 3.4], size: [3.4, 0.015, 2.0], mat: "paving", anim: "spread", start: T.site, dur: 0.3 });
   parts.push({ shape: "box", at: [-0.65, 0.4, 2.06], size: [0.4, 0.34, 0.04], mat: "green", anim: "pop", start: T.site + 0.1, dur: 0.3 });
+  return parts;
+}
+
+/** The plot round the building: forecourt and Vastu compass, site office, trees. */
+function plot(): Part[] {
+  const parts: Part[] = [];
+  parts.push({ shape: "box", at: [0, 0, 3.4], size: [3.4, 0.015, 2.0], mat: "paving", anim: "spread", start: T.site, dur: 0.3 });
   parts.push({ shape: "cyl", at: [0, 0.015, 3.5], size: [0.5, 0.03, 0], mat: "brass", anim: "pop", start: T.site + 0.2, dur: 0.3 });
   parts.push({ shape: "box", at: [0, 0.045, 3.5], size: [0.06, 0.02, 0.8], mat: "needle", anim: "pop", start: T.site + 0.3, dur: 0.3 });
   // Site office with a hard hat on the roof
@@ -212,7 +218,10 @@ function surroundings(): Part[] {
   return parts;
 }
 
-export const parts: Part[] = [...diaphragmWalls(), ...frame(), ...skin(), ...roofAndSite(), ...surroundings()];
+/** The building itself: it sways and shows its stress in "Try to break it". */
+export const buildingParts: Part[] = [...diaphragmWalls(), ...frame(), ...skin(), ...fittings()];
+/** Everything round it, which stays put. */
+export const siteParts: Part[] = [...plot(), ...surroundings()];
 
 /**
  * Rebar cages for one floor, drawn as lines just inside each column before its concrete.
