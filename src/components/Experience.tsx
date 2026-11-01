@@ -5,11 +5,14 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useSyncExternalStore } from "react";
 import { profile } from "@/content/profile";
+import type { Live, WeatherKind } from "@/content/types";
 import { wheelSteps } from "@/lib/gestures";
 import { clocks, useStore } from "@/lib/store";
 import { T } from "@/components/building/model";
 import { TitleBlock } from "@/components/sketch/TitleBlock";
+import { BrickWall } from "@/components/ui/BrickWall";
 import { IdentityCard } from "@/components/ui/IdentityCard";
+import { LiveCard } from "@/components/ui/LiveCard";
 import { Panel } from "@/components/ui/Panel";
 import { Stamp } from "@/components/ui/Stamp";
 import { StressTools } from "@/components/ui/StressTools";
@@ -31,6 +34,23 @@ function hasWebGL() {
 }
 const noSubscribe = () => () => {};
 
+const KINDS: WeatherKind[] = ["clear", "cloudy", "overcast", "fog", "rain", "storm", "snow"];
+
+/**
+ * Jamshedpur's weather. `?weather=rain` (or storm, fog, snow, overcast, cloudy, clear) previews a
+ * kind of weather over the real reading, to see how the site looks in it.
+ */
+async function loadLive(): Promise<Live | null> {
+  const live: Live | null = await fetch("/api/sky")
+    .then((r) => (r.ok ? r.json() : null))
+    .catch(() => null);
+  const preview = new URLSearchParams(window.location.search).get("weather") as WeatherKind | null;
+  if (!preview || !KINDS.includes(preview)) return live;
+  const base: Live = live ?? { tempC: 24, weather: "", kind: "clear", intensity: 0, isDay: true, solarKw: 2.4, solarPeakKw: 4.8, sunrise: "05:50 AM", sunset: "05:06 PM" };
+  const falling = preview === "rain" || preview === "storm" || preview === "snow";
+  return { ...base, kind: preview, weather: `${preview[0].toUpperCase()}${preview.slice(1)} (preview)`, intensity: falling ? 0.8 : 0 };
+}
+
 /** Elements that scroll by themselves, so scrolling them never moves through the building. */
 const scrollsItself = (t: EventTarget | null) => (t as Element | null)?.closest?.(".panel, .parts-list");
 
@@ -42,7 +62,7 @@ function step(dir: 1 | -1) {
     else if (dir === 1) s.build();
     return;
   }
-  if (s.phase !== "built" || s.panelOpen || s.test) return;
+  if (s.phase !== "built" || s.panelOpen || s.wallOpen || s.test) return;
   if (s.touring) s.stepTour(dir);
   else if (dir === 1) s.startTour();
 }
@@ -50,7 +70,7 @@ function step(dir: 1 | -1) {
 export function Experience() {
   const router = useRouter();
   const phase = useStore((s) => s.phase);
-  const panelOpen = useStore((s) => s.panelOpen);
+  const panelOpen = useStore((s) => s.panelOpen || s.wallOpen);
   const webgl = useSyncExternalStore(noSubscribe, hasWebGL, () => null);
 
   // Arriving (or coming back from /resume, which keeps this page mounted but hidden).
@@ -67,6 +87,22 @@ export function Experience() {
     if (!hasWebGL()) s.rebuilt();
   }, []);
 
+  // Live data: Jamshedpur's weather (refreshed every 10 minutes) and the visitors' wall.
+  useEffect(() => {
+    let alive = true;
+    const refresh = () => void loadLive().then((live) => alive && useStore.getState().setLive(live));
+    refresh();
+    const timer = window.setInterval(refresh, 10 * 60 * 1000);
+    fetch("/api/bricks")
+      .then((r) => r.json())
+      .then((wall) => alive && typeof wall?.configured === "boolean" && useStore.getState().setWall(wall))
+      .catch(() => {});
+    return () => {
+      alive = false;
+      window.clearInterval(timer);
+    };
+  }, []);
+
   // The building has folded back into paper: open the drawings.
   useEffect(() => {
     if (phase === "printed") router.push("/resume");
@@ -79,6 +115,7 @@ export function Experience() {
       const onControl = ["BUTTON", "A", "INPUT"].includes((e.target as HTMLElement)?.tagName);
       if (e.key === "Escape") {
         if (s.panelOpen) s.close();
+        else if (s.wallOpen) s.closeWall();
         else if (s.touring) s.stopTour();
       } else if (e.key === "Enter" && s.phase === "sketch" && !onControl) step(1);
       else if (["ArrowRight", "ArrowDown", "PageDown"].includes(e.key)) step(1);
@@ -143,7 +180,9 @@ export function Experience() {
       <IdentityCard />
       <TourCard />
       <StressTools />
+      <LiveCard />
       <Panel />
+      <BrickWall />
       <Stamp />
     </main>
   );

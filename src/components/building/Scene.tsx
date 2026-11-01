@@ -18,6 +18,7 @@ function tapEmpty() {
   const s = useStore.getState();
   if (s.phase === "sketch") s.finishSketch();
   else if (s.panelOpen) s.close();
+  else if (s.wallOpen) s.closeWall();
   else if (s.touring) s.stopTour();
 }
 
