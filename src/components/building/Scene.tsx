@@ -11,6 +11,7 @@ import { CAMERA } from "./model";
 import { Rig } from "./Rig";
 import { SUNSET, Sky } from "./Sky";
 import { StressEffects } from "./StressTest";
+import { VisitorWall } from "./VisitorWall";
 
 /** A tap on empty space: finish the drawing, or close whatever is open. */
 function tapEmpty() {
@@ -42,6 +43,7 @@ export default function Scene() {
       <Building />
       <StressEffects />
       <Rain />
+      <VisitorWall />
       <Hotspots />
     </Canvas>
   );

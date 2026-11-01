@@ -5,7 +5,7 @@ import { useRef } from "react";
 import * as THREE from "three";
 import type { WeatherKind } from "@/content/types";
 import { clocks, fx, useStore } from "@/lib/store";
-import { ANCHORS, CAMERA, FOCUS, SKETCH_SECONDS, T } from "./model";
+import { ANCHORS, CAMERA, FOCUS, SKETCH_SECONDS, T, VISITOR_WALL } from "./model";
 import { CLOUDED, SUNSET, SUN_DIRECTION } from "./Sky";
 import { TEST_SECONDS, envelope } from "./StressTest";
 
@@ -98,17 +98,17 @@ export function Rig() {
       pos = tgt.clone().add(offset);
       tgt.y -= 3;
     }
-    if (s.focus) {
-      const { dist, from } = FOCUS[s.focus];
-      tgt = v(ANCHORS[s.focus]);
+    if (s.focus || s.wallOpen) {
+      const { dist, from } = s.focus ? FOCUS[s.focus] : VISITOR_WALL.focus;
+      tgt = v(s.focus ? ANCHORS[s.focus] : VISITOR_WALL.focus.anchor);
       pos = tgt.clone().add(v(from).normalize().multiplyScalar(tall ? dist * 1.35 : dist));
-      if (!tall && s.panelOpen) {
+      if (!tall && (s.panelOpen || s.wallOpen)) {
         // Keep the part visible to the left of the side panel.
         const right = tgt.clone().sub(pos).normalize().cross(UP).normalize();
         tgt.add(right.multiplyScalar(dist * 0.22));
       }
       // Phones: the card or sheet covers the bottom, so show the part in the top half.
-      if (tall && (s.panelOpen || s.touring)) tgt.y -= dist * 0.12;
+      if (tall && (s.panelOpen || s.wallOpen || s.touring)) tgt.y -= dist * 0.12;
     } else if (!tall && !s.reducedMotion && s.phase === "built") {
       pos.x += state.pointer.x * 0.5;
       pos.y += state.pointer.y * 0.3;

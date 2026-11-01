@@ -171,7 +171,6 @@ function surroundings(): Part[] {
   add({ shape: "box", at: [4.1, 0, 2.75], size: [4.8, 0.012, 0.55], mat: "paving", anim: "spread", start: T.site });
   add({ shape: "box", at: [6.0, 0, 1.95], size: [0.55, 0.012, 1.1], mat: "paving", anim: "spread", start: T.site });
   add({ shape: "box", at: [-3.7, 0, 4.95], size: [2.6, 0.28, 0.3], mat: "hedge", anim: "grow", start: T.site + 0.2 });
-  add({ shape: "box", at: [7.5, 0, 4.95], size: [2.6, 0.28, 0.3], mat: "hedge", anim: "grow", start: T.site + 0.25 });
   for (const [x, z] of [[-2.0, 4.75], [2.0, 4.75], [5.0, 3.25]] as const) {
     add({ shape: "cyl", at: [x, 0, z], size: [0.025, 1.1, 0], mat: "steel", anim: "grow", start: T.site + 0.3 });
     add({ shape: "sphere", at: [x, 1.08, z], size: [0.07, 0, 0], mat: "lamp", start: T.site + 0.5 });
@@ -291,6 +290,18 @@ export function sketchSegments(): [V3, V3][] {
   segs.push([[3.7, 0, 2], [3.7, ROOF, 2]], [[3.6, -0.1, 2], [3.8, 0.1, 2]], [[3.6, ROOF - 0.1, 2], [3.8, ROOF + 0.1, 2]]);
   return segs;
 }
+
+/**
+ * The visitors' wall along the front right of the plot: one brick per visitor, laid in courses
+ * from the left. `at` is the centre of its base; the camera looks at it from `focus`.
+ */
+export const VISITOR_WALL = {
+  at: [7.3, 0, 4.95] as V3,
+  length: 3.4,
+  brick: [0.22, 0.09, 0.12] as V3,
+  courses: 9,
+  focus: { anchor: [7.3, 0.45, 4.95] as V3, dist: 7, from: [0.15, 0.45, 1] as V3 },
+};
 
 /** Where the dot sits and the camera looks for each part of the building. */
 export const ANCHORS: Record<HotspotId, V3> = {
