@@ -15,6 +15,28 @@ export type HotspotId = "hut" | "foundation" | "structure" | "audit" | "green" |
 
 export type StressTestId = "load" | "quake" | "wind" | "flood";
 
+/** The kinds of weather the scene can show. */
+export type WeatherKind = "clear" | "cloudy" | "overcast" | "fog" | "rain" | "storm" | "snow";
+
+/** Right now in Jamshedpur, from /api/sky. */
+export type Live = {
+  tempC: number;
+  /** In words, as the weather service puts it ("Patchy rain nearby"). */
+  weather: string;
+  kind: WeatherKind;
+  /** How hard it's raining or snowing, 0..1. */
+  intensity: number;
+  isDay: boolean;
+  /** What the model's rooftop array would be producing now, from the real solar radiation. */
+  solarKw: number;
+  solarPeakKw: number;
+  sunrise: string;
+  sunset: string;
+};
+
+/** One brick in the visitors' wall. */
+export type Brick = { name: string; note: string; at: number };
+
 /** One of the "Try to break it" tests. */
 export type StressTest = {
   id: StressTestId;
