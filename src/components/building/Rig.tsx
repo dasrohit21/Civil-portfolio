@@ -3,13 +3,38 @@
 import { useFrame } from "@react-three/fiber";
 import { useRef } from "react";
 import * as THREE from "three";
-import { clocks, useStore } from "@/lib/store";
+import type { WeatherKind } from "@/content/types";
+import { clocks, fx, useStore } from "@/lib/store";
 import { ANCHORS, CAMERA, FOCUS, SKETCH_SECONDS, T } from "./model";
-import { SUN_DIRECTION } from "./Sky";
+import { CLOUDED, SUNSET, SUN_DIRECTION } from "./Sky";
 import { TEST_SECONDS, envelope } from "./StressTest";
 
 const UP = new THREE.Vector3(0, 1, 0);
 const SUN_POSITION = SUN_DIRECTION.clone().multiplyScalar(18).toArray();
+const SUN_WARM = new THREE.Color("#ffb46b");
+const SUN_CLOUDED = new THREE.Color("#d9dde4");
+const FOG_CLEAR = new THREE.Color(SUNSET.horizon);
+const FOG_CLOUDED = new THREE.Color(CLOUDED.horizon);
+
+/** How grey and how foggy each kind of weather makes the scene. */
+const LOOK: Record<WeatherKind, { grey: number; fog: number }> = {
+  clear: { grey: 0, fog: 0 },
+  cloudy: { grey: 0.35, fog: 0.1 },
+  overcast: { grey: 0.6, fog: 0.25 },
+  fog: { grey: 0.5, fog: 1 },
+  rain: { grey: 0.75, fog: 0.5 },
+  storm: { grey: 0.92, fog: 0.55 },
+  snow: { grey: 0.6, fog: 0.5 },
+};
+
+/** Ease the scene towards Jamshedpur's weather, and throw the odd bolt of lightning in a storm. */
+function updateWeather(kind: WeatherKind, dt: number) {
+  const look = LOOK[kind];
+  fx.grey = THREE.MathUtils.damp(fx.grey, look.grey, 1.2, dt);
+  fx.fog = THREE.MathUtils.damp(fx.fog, look.fog, 1.2, dt);
+  if (kind === "storm" && Math.random() < dt * 0.3) fx.flash = 0.9;
+  fx.flash = THREE.MathUtils.damp(fx.flash, 0, 7, dt);
+}
 
 const v = (a: readonly number[]) => new THREE.Vector3(a[0], a[1], a[2]);
 const smooth = (k: number) => k * k * (3 - 2 * k);
@@ -17,6 +42,8 @@ const smooth = (k: number) => k * k * (3 - 2 * k);
 /** Runs the sketch and build clocks, moves the camera, and lights the model. */
 export function Rig() {
   const look = useRef(v(CAMERA.sketch.target));
+  const sun = useRef<THREE.DirectionalLight>(null);
+  const sky = useRef<THREE.HemisphereLight>(null);
 
   useFrame((state, delta) => {
     const camera = state.camera;
@@ -44,6 +71,20 @@ export function Rig() {
       if (clocks.test >= TEST_SECONDS) s.finishTest();
     }
     const built = Math.min(1, clocks.build / T.end);
+
+    // Weather: only once the building has risen out of the paper.
+    updateWeather(clocks.build > 1 ? (s.live?.kind ?? "clear") : "clear", dt);
+    if (sun.current) {
+      sun.current.intensity = 3.2 * (1 - 0.72 * fx.grey);
+      sun.current.color.lerpColors(SUN_WARM, SUN_CLOUDED, fx.grey);
+    }
+    if (sky.current) sky.current.intensity = 0.55 + 0.3 * fx.grey + 3 * fx.flash;
+    const fog = state.scene.fog as THREE.Fog | null;
+    if (fog) {
+      fog.near = 30 - 24 * fx.fog;
+      fog.far = 95 - 55 * fx.fog;
+      fog.color.lerpColors(FOG_CLEAR, FOG_CLOUDED, fx.grey);
+    }
 
     // Camera: the overview (from the front while it's a sketch), or the part that's open.
     const tall = state.size.width < state.size.height * 0.95;
@@ -93,10 +134,11 @@ export function Rig() {
   return (
     <>
       {/* Golden hour: warm sky above, green bounce from the lawn below */}
-      <hemisphereLight args={["#ffd8b0", "#6b7a4c", 0.55]} />
+      <hemisphereLight ref={sky} args={["#ffd8b0", "#6b7a4c", 0.55]} />
       <ambientLight intensity={0.12} />
-      {/* The low sun, front left: long shadows, warm faces */}
+      {/* The low sun, front left: long shadows, warm faces. Clouds dim it and cool it. */}
       <directionalLight
+        ref={sun}
         position={SUN_POSITION}
         intensity={3.2}
         color="#ffb46b"

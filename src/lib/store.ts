@@ -2,7 +2,7 @@
 
 import { create } from "zustand";
 import { hotspots } from "@/content/building";
-import type { HotspotId, StressTestId } from "@/content/types";
+import type { Brick, HotspotId, Live, StressTestId } from "@/content/types";
 
 /**
  * sketch:   the pencil draws the building on paper
@@ -19,6 +19,12 @@ export type Phase = "sketch" | "building" | "built" | "printing" | "printed";
  */
 export const clocks = { sketch: 0, build: 0, test: 0 };
 
+/**
+ * How the weather looks right now, eased every frame by the Rig towards the live weather:
+ * grey (0 golden hour .. 1 storm clouds), fog (0 clear .. 1 thick) and a lightning flash.
+ */
+export const fx = { grey: 0, fog: 0, flash: 0 };
+
 type State = {
   phase: Phase;
   sketchDone: boolean;
@@ -34,6 +40,13 @@ type State = {
   /** The "Try to break it" test that is running, and the last one that held. */
   test: StressTestId | null;
   result: StressTestId | null;
+  /** Jamshedpur right now (null until it arrives, or if the weather service is down). */
+  live: Live | null;
+  /** The visitors' wall: newest bricks first. `wallConfigured` is null until we've asked. */
+  bricks: Brick[];
+  brickCount: number;
+  wallConfigured: boolean | null;
+  wallOpen: boolean;
 
   setEnv: (env: { reducedMotion: boolean; lowPower: boolean }) => void;
   finishSketch: () => void;
@@ -52,6 +65,11 @@ type State = {
   runTest: (id: StressTestId) => void;
   finishTest: () => void;
   clearResult: () => void;
+  setLive: (live: Live | null) => void;
+  setWall: (wall: { configured: boolean; count: number; bricks: Brick[] }) => void;
+  laidBrick: (brick: Brick, count: number) => void;
+  openWall: () => void;
+  closeWall: () => void;
 };
 
 export const useStore = create<State>((set, get) => ({
@@ -67,6 +85,11 @@ export const useStore = create<State>((set, get) => ({
   stampAt: 0,
   test: null,
   result: null,
+  live: null,
+  bricks: [],
+  brickCount: 0,
+  wallConfigured: null,
+  wallOpen: false,
 
   setEnv: (env) => set(env),
   finishSketch: () => set({ sketchDone: true }),
@@ -75,10 +98,10 @@ export const useStore = create<State>((set, get) => ({
     set({ phase: "building", sketchDone: true });
   },
   finishBuild: () => set({ phase: "built", stampAt: Date.now() }),
-  print: () => set({ phase: "printing", focus: null, panelOpen: false, touring: false, hovered: null, test: null, result: null }),
+  print: () => set({ phase: "printing", focus: null, panelOpen: false, touring: false, hovered: null, test: null, result: null, wallOpen: false }),
   finishPrint: () => set({ phase: "printed" }),
   rebuilt: () => set({ phase: "built", sketchDone: true }),
-  open: (id) => set({ focus: id, panelOpen: true, touring: false, result: null }),
+  open: (id) => set({ focus: id, panelOpen: true, touring: false, result: null, wallOpen: false }),
   close: () => set({ focus: null, panelOpen: false }),
   hover: (hovered) => set({ hovered }),
   startTour: () => set({ touring: true, tourIndex: 0, panelOpen: false, focus: hotspots[0].id }),
@@ -95,4 +118,9 @@ export const useStore = create<State>((set, get) => ({
   },
   finishTest: () => set({ result: get().test, test: null }),
   clearResult: () => set({ result: null }),
+  setLive: (live) => set({ live }),
+  setWall: ({ configured, count, bricks }) => set({ wallConfigured: configured, brickCount: count, bricks }),
+  laidBrick: (brick, count) => set({ bricks: [brick, ...get().bricks], brickCount: count }),
+  openWall: () => set({ wallOpen: true, panelOpen: false, focus: null, touring: false, result: null }),
+  closeWall: () => set({ wallOpen: false }),
 }));

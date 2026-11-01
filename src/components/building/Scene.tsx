@@ -6,6 +6,7 @@ import { useStore } from "@/lib/store";
 import { SketchLines } from "@/components/sketch/SketchLines";
 import { Building } from "./Building";
 import { Hotspots } from "./Hotspots";
+import { Rain } from "./Rain";
 import { CAMERA } from "./model";
 import { Rig } from "./Rig";
 import { SUNSET, Sky } from "./Sky";
@@ -40,6 +41,7 @@ export default function Scene() {
       <SketchLines />
       <Building />
       <StressEffects />
+      <Rain />
       <Hotspots />
     </Canvas>
   );
