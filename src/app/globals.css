@@ -1,26 +1,603 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --paper: #f3eee3;
+  --paper-deep: #e8e1d1;
+  --card: rgba(250, 247, 240, 0.94);
+  --ink: #1f2633;
+  --ink-dim: #5d6472;
+  --line: #d4cab6;
+  --blue: #2d5b9a;
+  --orange: #d9601f;
+  --green: #3f7d4e;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-paper: var(--paper);
+  --color-ink: var(--ink);
+  --color-blue: var(--blue);
+  --color-orange: var(--orange);
+  --font-sans: var(--font-archivo), system-ui, sans-serif;
+  --font-hand: var(--font-hand), cursive;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-archivo), system-ui, sans-serif;
+}
+
+/* ─── Shared type and buttons ─────────────────────────────── */
+
+.display {
+  font-stretch: 75%;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  line-height: 0.95;
+  text-transform: uppercase;
+}
+.hand {
+  font-family: var(--font-hand), cursive;
+  color: var(--blue);
+}
+.label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+.btn-primary,
+.btn-quiet {
+  border-radius: 2px;
+  padding: 9px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.btn-primary {
+  background: var(--ink);
+  color: var(--paper);
+  border: 1.5px solid var(--ink);
+}
+.btn-primary:hover {
+  background: var(--blue);
+  border-color: var(--blue);
+}
+.btn-quiet {
+  border: 1.5px solid var(--line);
+  color: var(--ink);
+  background: var(--card);
+}
+.btn-quiet:hover {
+  border-color: var(--ink);
+}
+.btn-quiet:disabled {
+  opacity: 0.4;
+}
+.link-quiet {
+  font-size: 14px;
+  color: var(--ink-dim);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.link-quiet:hover {
+  color: var(--ink);
+}
+:focus-visible {
+  outline: 2px solid var(--orange);
+  outline-offset: 2px;
+}
+
+/* ─── The experience (home page) ──────────────────────────── */
+
+.experience {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+}
+.canvas-wrap {
+  position: absolute;
+  inset: 0;
+}
+.topbar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  pointer-events: none;
+}
+.topbar > * {
+  pointer-events: auto;
+}
+.topbar-name {
+  font-weight: 800;
+  font-stretch: 75%;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.no-webgl {
+  position: absolute;
+  top: 64px;
+  left: 24px;
+  right: 24px;
+  font-size: 14px;
+  color: var(--ink-dim);
+}
+
+/* Cards come and go with the phase */
+.title-block,
+.identity {
+  transition: opacity 0.5s, transform 0.5s;
+}
+.title-block[aria-hidden="true"],
+.identity[aria-hidden="true"] {
+  opacity: 0;
+  transform: translateY(12px);
+  pointer-events: none;
+}
+
+/* ─── Act 1: the title block ──────────────────────────────── */
+
+.title-block {
+  position: absolute;
+  right: 32px;
+  bottom: 32px;
+  z-index: 10;
+  width: 420px;
+}
+.title-lead {
+  display: inline-block;
+  font-size: 22px;
+  margin-bottom: 10px;
+  padding: 0 6px;
+  background: var(--paper);
+  animation: write 1.2s steps(28) 0.2s both;
+}
+.tb-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border: 2px solid var(--ink);
+  background: var(--card);
+}
+.tb-row {
+  border-right: 1px solid var(--ink);
+  border-bottom: 1px solid var(--ink);
+  padding: 6px 10px 4px;
+  min-width: 0;
+}
+.tb-row:nth-child(3n + 6),
+.tb-wide {
+  border-right: 0;
+}
+.tb-row:nth-last-child(-n + 3) {
+  border-bottom: 0;
+}
+.tb-wide {
+  grid-column: 1 / -1;
+}
+.tb-row dt {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+.tb-row dd {
+  font-size: 18px;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  animation: write 0.9s steps(20) both;
+}
+.tb-name {
+  font-size: 30px !important;
+}
+/* Lettered one box after another while the pencil draws */
+.tb-row:nth-child(1) dd { animation-delay: 0.8s; }
+.tb-row:nth-child(2) dd { animation-delay: 1.5s; }
+.tb-row:nth-child(3) dd { animation-delay: 2.1s; }
+.tb-row:nth-child(4) dd { animation-delay: 2.7s; }
+.tb-row:nth-child(5) dd { animation-delay: 3.1s; }
+.tb-row:nth-child(6) dd { animation-delay: 3.5s; }
+@keyframes write {
+  from { clip-path: inset(0 100% 0 0); }
+  to { clip-path: inset(0 0 0 0); }
+}
+.tb-actions {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-top: 18px;
+}
+.btn-build {
+  font-weight: 800;
+  font-stretch: 75%;
+  font-size: 22px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 10px 26px;
+  color: var(--ink-dim);
+  border: 2px dashed var(--line);
+  background: var(--card);
+  transition: all 0.2s;
+}
+.title-block[data-ready="true"] .btn-build {
+  color: var(--orange);
+  border: 3px solid var(--orange);
+  transform: rotate(-2deg);
+  animation: stamp-in 0.35s ease-out both;
+}
+.title-block[data-ready="true"] .btn-build:hover {
+  background: var(--orange);
+  color: #fff;
+}
+@keyframes stamp-in {
+  from { transform: rotate(-2deg) scale(1.5); opacity: 0; }
+  to { transform: rotate(-2deg) scale(1); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .title-lead,
+  .tb-row dd,
+  .title-block[data-ready="true"] .btn-build {
+    animation: none;
+  }
+}
+
+/* ─── Act 3: who she is ───────────────────────────────────── */
+
+.identity {
+  position: absolute;
+  left: 32px;
+  bottom: 32px;
+  z-index: 10;
+  width: 400px;
+  padding: 22px 24px;
+  background: var(--card);
+  border: 1.5px solid var(--line);
+  box-shadow: 0 10px 30px rgba(31, 38, 51, 0.08);
+}
+.identity-name {
+  font-size: 56px;
+  margin: 6px 0 10px;
+}
+.identity-headline {
+  font-size: 16px;
+  line-height: 1.45;
+  color: var(--ink-dim);
+}
+.identity-links {
+  display: flex;
+  gap: 16px;
+  margin-top: 12px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.identity-links a {
+  color: var(--blue);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.identity-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 18px;
+}
+.parts-list {
+  margin-top: 18px;
+}
+.parts-list ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+.parts-list button {
+  font-size: 13px;
+  padding: 4px 10px;
+  border: 1px solid var(--line);
+  background: #fff;
+}
+.parts-list button:hover {
+  border-color: var(--orange);
+  color: var(--orange);
+}
+.hint {
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--ink-dim);
+}
+
+/* ─── Hotspots on the model ───────────────────────────────── */
+
+.hotspot {
+  position: relative;
+  display: block;
+  width: 26px;
+  height: 26px;
+  cursor: pointer;
+}
+.hotspot-dot {
+  position: absolute;
+  inset: 6px;
+  border-radius: 50%;
+  background: var(--orange);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.9);
+}
+.hotspot-dot::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 2px solid var(--orange);
+  animation: pulse 1.8s ease-out infinite;
+}
+.hotspot.is-here .hotspot-dot {
+  background: var(--blue);
+}
+@keyframes pulse {
+  from { transform: scale(0.6); opacity: 1; }
+  to { transform: scale(1.6); opacity: 0; }
+}
+.hotspot-tag {
+  position: absolute;
+  left: 30px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  white-space: nowrap;
+  text-align: left;
+  padding: 6px 10px;
+  background: var(--card);
+  border: 1px solid var(--ink);
+  pointer-events: none;
+}
+.hotspot-label {
+  font-weight: 700;
+  font-size: 13px;
+}
+.hotspot-hint {
+  font-family: var(--font-hand), cursive;
+  color: var(--blue);
+  font-size: 13px;
+}
+
+/* ─── The walk ────────────────────────────────────────────── */
+
+.tour {
+  position: absolute;
+  left: 50%;
+  bottom: 24px;
+  z-index: 12;
+  width: min(560px, calc(100% - 32px));
+  transform: translateX(-50%);
+  padding: 18px 20px;
+  background: var(--card);
+  border: 1.5px solid var(--line);
+  box-shadow: 0 10px 30px rgba(31, 38, 51, 0.08);
+}
+.tour-progress {
+  height: 3px;
+  background: var(--paper-deep);
+  margin-bottom: 12px;
+}
+.tour-progress span {
+  display: block;
+  height: 100%;
+  background: var(--orange);
+  transition: width 0.3s;
+}
+.tour-title {
+  font-size: 24px;
+  font-weight: 800;
+  font-stretch: 75%;
+  text-transform: uppercase;
+  margin: 2px 0 6px;
+}
+.tour-intro {
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--ink-dim);
+}
+.tour-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+}
+.tour-end {
+  margin-left: auto;
+  padding: 6px 10px;
+  color: var(--ink-dim);
+}
+
+/* ─── The panel ───────────────────────────────────────────── */
+
+.panel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 15;
+  width: 460px;
+  overflow-y: auto;
+  background: var(--paper);
+  border-left: 1.5px solid var(--line);
+  transform: translateX(100%);
+  transition: transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.panel[data-open="true"] {
+  transform: none;
+}
+.panel-inner {
+  padding: 72px 32px 40px;
+}
+.panel-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.panel-title {
+  font-size: 44px;
+  margin: 12px 0 14px;
+  outline: none;
+}
+.panel-intro {
+  font-size: 17px;
+  line-height: 1.5;
+}
+.job {
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+.job-role {
+  font-weight: 700;
+  font-size: 17px;
+}
+.job-org {
+  color: var(--ink-dim);
+  margin-bottom: 4px;
+}
+.job-points {
+  margin-top: 14px;
+  padding-left: 18px;
+  list-style: square;
+  font-size: 15px;
+  line-height: 1.5;
+}
+.job-points li + li {
+  margin-top: 8px;
+}
+.job-points li::marker {
+  color: var(--orange);
+}
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 20px;
+}
+.chips li {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border: 1px solid var(--blue);
+  color: var(--blue);
+}
+.panel-next {
+  margin-top: 28px;
+  font-weight: 700;
+  color: var(--orange);
+}
+/* The name card makes way for the panel */
+.experience[data-panel="open"] .identity {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ─── The inspection stamp ────────────────────────────────── */
+
+.stamp {
+  position: absolute;
+  top: 18%;
+  left: 50%;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 26px;
+  color: var(--green);
+  border: 4px double var(--green);
+  background: rgba(250, 247, 240, 0.85);
+  pointer-events: none;
+  animation: stamp 3s ease-out forwards;
+}
+.stamp-main {
+  font-weight: 800;
+  font-stretch: 75%;
+  font-size: 30px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.stamp-sub {
+  font-family: var(--font-hand), cursive;
+  font-size: 16px;
+}
+@keyframes stamp {
+  0% { transform: translateX(-50%) rotate(-6deg) scale(2); opacity: 0; }
+  10% { transform: translateX(-50%) rotate(-6deg) scale(1); opacity: 1; }
+  80% { transform: translateX(-50%) rotate(-6deg) scale(1); opacity: 1; }
+  100% { transform: translateX(-50%) rotate(-6deg) scale(1); opacity: 0; }
+}
+
+/* ─── Phones ──────────────────────────────────────────────── */
+
+@media (max-width: 720px) {
+  .topbar {
+    padding: 12px 16px;
+  }
+  .title-block {
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
+    width: auto;
+  }
+  .title-lead {
+    font-size: 18px;
+  }
+  .tb-row dd {
+    font-size: 15px;
+  }
+  .tb-name {
+    font-size: 24px !important;
+  }
+  .identity {
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    width: auto;
+    padding: 16px 18px;
+  }
+  .identity-name {
+    font-size: 40px;
+  }
+  .identity-headline {
+    font-size: 14px;
+  }
+  .parts-list ul {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+  .parts-list li {
+    flex: none;
+  }
+  .tour {
+    bottom: 12px;
+  }
+  .panel {
+    top: auto;
+    left: 0;
+    width: 100%;
+    height: 62vh;
+    border-left: 0;
+    border-top: 1.5px solid var(--line);
+    transform: translateY(100%);
+  }
+  .panel-inner {
+    padding: 20px 20px 32px;
+  }
+  .panel-title {
+    font-size: 32px;
+  }
+  .stamp-main {
+    font-size: 22px;
+  }
 }
