@@ -69,7 +69,7 @@
   list-style: square;
 }
 .sheet li::marker {
-  color: var(--orange);
+  color: var(--accent);
 }
 .sheet-skills div + div {
   margin-top: 6px;

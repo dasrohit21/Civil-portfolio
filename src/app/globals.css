@@ -8,15 +8,14 @@
   --ink-dim: #5d6472;
   --line: #d4cab6;
   --blue: #2d5b9a;
-  --orange: #d9601f;
-  --green: #3f7d4e;
+  --accent: #0f766e;
 }
 
 @theme inline {
   --color-paper: var(--paper);
   --color-ink: var(--ink);
   --color-blue: var(--blue);
-  --color-orange: var(--orange);
+  --color-accent: var(--accent);
   --font-sans: var(--font-archivo), system-ui, sans-serif;
   --font-hand: var(--font-hand), cursive;
 }
@@ -85,7 +84,7 @@ body {
   color: var(--ink);
 }
 :focus-visible {
-  outline: 2px solid var(--orange);
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 
@@ -228,13 +227,13 @@ body {
   transition: all 0.2s;
 }
 .title-block[data-ready="true"] .btn-build {
-  color: var(--orange);
-  border: 3px solid var(--orange);
+  color: var(--accent);
+  border: 3px solid var(--accent);
   transform: rotate(-2deg);
   animation: stamp-in 0.35s ease-out both;
 }
 .title-block[data-ready="true"] .btn-build:hover {
-  background: var(--orange);
+  background: var(--accent);
   color: #fff;
 }
 @keyframes stamp-in {
@@ -304,8 +303,8 @@ body {
   background: #fff;
 }
 .parts-list button:hover {
-  border-color: var(--orange);
-  color: var(--orange);
+  border-color: var(--accent);
+  color: var(--accent);
 }
 .hint {
   margin-top: 12px;
@@ -326,7 +325,7 @@ body {
   position: absolute;
   inset: 6px;
   border-radius: 50%;
-  background: var(--orange);
+  background: var(--accent);
   box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.9);
 }
 .hotspot-dot::after {
@@ -334,7 +333,7 @@ body {
   position: absolute;
   inset: -6px;
   border-radius: 50%;
-  border: 2px solid var(--orange);
+  border: 2px solid var(--accent);
   animation: pulse 1.8s ease-out infinite;
 }
 .hotspot.is-here .hotspot-dot {
@@ -390,7 +389,7 @@ body {
 .tour-progress span {
   display: block;
   height: 100%;
-  background: var(--orange);
+  background: var(--accent);
   transition: width 0.3s;
 }
 .tour-title {
@@ -476,7 +475,7 @@ body {
   margin-top: 8px;
 }
 .job-points li::marker {
-  color: var(--orange);
+  color: var(--accent);
 }
 .chips {
   display: flex;
@@ -494,7 +493,7 @@ body {
 .panel-next {
   margin-top: 28px;
   font-weight: 700;
-  color: var(--orange);
+  color: var(--accent);
 }
 /* The name card makes way for the panel */
 .experience[data-panel="open"] .identity {
@@ -513,8 +512,8 @@ body {
   flex-direction: column;
   align-items: center;
   padding: 12px 26px;
-  color: var(--green);
-  border: 4px double var(--green);
+  color: var(--accent);
+  border: 4px double var(--accent);
   background: rgba(250, 247, 240, 0.85);
   pointer-events: none;
   animation: stamp 3s ease-out forwards;

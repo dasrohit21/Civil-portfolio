@@ -82,7 +82,7 @@ export function SketchLines() {
   return (
     <>
       <lineSegments geometry={geo}>
-        <lineBasicMaterial ref={mat} color="#3a3f4a" transparent opacity={0.85} />
+        <lineBasicMaterial ref={mat} color="#3a3f4a" transparent opacity={0.85} fog={false} />
       </lineSegments>
       <group ref={pencil} visible={false}>
         <Pencil />
