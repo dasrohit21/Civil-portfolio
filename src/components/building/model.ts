@@ -10,7 +10,9 @@ export type V3 = [number, number, number];
 
 export type Mat =
   | "concrete" | "foundation" | "glass" | "door" | "solar" | "brass" | "needle" | "green"
-  | "hut" | "hutRoof" | "hat" | "tree" | "trunk" | "scanner" | "led" | "paving";
+  | "hut" | "hutRoof" | "hat" | "tree" | "trunk" | "scanner" | "led" | "paving"
+  | "terracotta" | "glow" | "grass" | "hedge" | "crane" | "steel" | "lamp" | "car" | "tyre"
+  | "brick" | "rebar" | "land" | "skyline";
 
 /** grow: rises from its base · spread: widens from its centre · drop: falls into place · pop: scales up */
 export type Anim = "grow" | "spread" | "drop" | "pop";
@@ -102,8 +104,13 @@ function skin(): Part[] {
     parts.push({ shape: "box", at: [3, y, 0], size: [0.04, h, 3.76], mat: "glass", anim: "grow", start, dur: 0.4 });
   }
   parts.push({ shape: "box", at: [0, SLAB, 2.03], size: [0.8, 0.85, 0.05], mat: "door", anim: "grow", start: T.glass, dur: 0.3 });
-  // Parapet round the roof
-  const p = (at: V3, size: V3) => parts.push({ shape: "box", at, size, mat: "concrete", anim: "grow", start: T.roof, dur: 0.3 });
+  // Rooms with their lights on, seen through the glass
+  const lit: [number, number][] = [[0, 2], [1, -2], [1, 2], [2, 0], [3, -2], [3, 2]];
+  lit.forEach(([f, x], k) =>
+    parts.push({ shape: "box", at: [x, f * FH + SLAB + 0.06, -1.9], size: [1.7, h - 0.14, 0.03], mat: "glow", anim: "pop", start: T.glass + 0.5 + k * 0.08, dur: 0.3 }),
+  );
+  // Terracotta parapet round the roof
+  const p = (at: V3, size: V3) => parts.push({ shape: "box", at, size, mat: "terracotta", anim: "grow", start: T.roof, dur: 0.3 });
   p([0, ROOF, 2.2], [6.5, 0.22, 0.1]);
   p([0, ROOF, -2.2], [6.5, 0.22, 0.1]);
   p([-3.2, ROOF, 0], [0.1, 0.22, 4.5]);
@@ -120,7 +127,7 @@ function roofAndSite(): Part[] {
   let i = 0;
   for (const z of SOLAR_Z)
     for (const x of SOLAR_X)
-      parts.push({ shape: "box", at: [x, ROOF + 0.12, z], size: [1.3, 0.05, 0.8], rot: [-0.35, 0, 0], mat: "solar", anim: "drop", start: T.solar + i++ * 0.06, dur: 0.35 });
+      parts.push({ shape: "box", at: [x, ROOF + 0.12, z], size: [1.3, 0.05, 1.05], rot: [-0.35, 0, 0], mat: "solar", anim: "drop", start: T.solar + i++ * 0.06, dur: 0.35 });
   // NDT scanner on the right face
   parts.push({ shape: "box", at: [3.12, 2.35, 0.9], size: [0.14, 0.32, 0.42], mat: "scanner", anim: "pop", start: T.site + 0.4, dur: 0.3 });
   parts.push({ shape: "sphere", at: [3.2, 2.6, 1.0], size: [0.04, 0, 0], mat: "led", anim: "pop", start: T.site + 0.5, dur: 0.2 });
@@ -137,7 +144,7 @@ function roofAndSite(): Part[] {
   parts.push({ shape: "cyl", at: [7.1, 1.08, 0.85], size: [0.27, 0.02, 0], mat: "hat", anim: "pop", start: T.hut + 0.3, dur: 0.3 });
   parts.push({ shape: "dome", at: [7.1, 1.1, 0.85], size: [0.2, 0, 0], mat: "hat", anim: "pop", start: T.hut + 0.3, dur: 0.3 });
   // Model trees
-  const trees: [number, number][] = [[-4.3, -3.2], [-4.4, 3.8], [8.2, -2.8], [4.8, -3.2], [-2.4, 4.6]];
+  const trees: [number, number][] = [[-4.4, 3.8], [-4.3, -3.6], [8.6, 3.9], [4.3, -3.6], [-2.4, 4.6], [8.7, -0.7]];
   trees.forEach(([x, z], k) => {
     parts.push({ shape: "cyl", at: [x, 0, z], size: [0.05, 0.5, 0], mat: "trunk", anim: "grow", start: T.site + k * 0.08, dur: 0.3 });
     parts.push({ shape: "sphere", at: [x, 0.45, z], size: [0.45, 0, 0], mat: "tree", anim: "pop", start: T.site + 0.1 + k * 0.08, dur: 0.35 });
@@ -145,7 +152,67 @@ function roofAndSite(): Part[] {
   return parts;
 }
 
-export const parts: Part[] = [...diaphragmWalls(), ...frame(), ...skin(), ...roofAndSite()];
+/** Everything round the building: lawn, path, crane, ground-mounted solar, site life, and Jamshedpur on the horizon. */
+function surroundings(): Part[] {
+  const parts: Part[] = [];
+  const add = (p: Omit<Part, "anim" | "dur"> & Partial<Pick<Part, "anim" | "dur">>) => parts.push({ anim: "pop", dur: 0.3, ...p });
+
+  // The land runs to the horizon; the model's lawn sits on top of the plinth.
+  add({ shape: "box", at: [0, -1.94, -6], size: [160, 0.02, 120], mat: "land", anim: "spread", start: 0, dur: 1.2 });
+  add({ shape: "box", at: [PLINTH.at[0], -0.03, PLINTH.at[2]], size: [PLINTH.size[0] - 0.1, 0.026, PLINTH.size[2] - 0.1], mat: "grass", anim: "spread", start: 0.15, dur: 0.6 });
+
+  // Path from the forecourt to the site office, hedges along the front, street lamps
+  add({ shape: "box", at: [4.1, 0, 2.75], size: [4.8, 0.012, 0.55], mat: "paving", anim: "spread", start: T.site });
+  add({ shape: "box", at: [6.0, 0, 1.95], size: [0.55, 0.012, 1.1], mat: "paving", anim: "spread", start: T.site });
+  add({ shape: "box", at: [-3.7, 0, 4.95], size: [2.6, 0.28, 0.3], mat: "hedge", anim: "grow", start: T.site + 0.2 });
+  add({ shape: "box", at: [7.5, 0, 4.95], size: [2.6, 0.28, 0.3], mat: "hedge", anim: "grow", start: T.site + 0.25 });
+  for (const [x, z] of [[-2.0, 4.75], [2.0, 4.75], [5.0, 3.25]] as const) {
+    add({ shape: "cyl", at: [x, 0, z], size: [0.025, 1.1, 0], mat: "steel", anim: "grow", start: T.site + 0.3 });
+    add({ shape: "sphere", at: [x, 1.08, z], size: [0.07, 0, 0], mat: "lamp", start: T.site + 0.5 });
+  }
+
+  // A parked car
+  add({ shape: "box", at: [4.3, 0.08, 4.0], size: [1.15, 0.26, 0.56], mat: "car", start: T.site + 0.4 });
+  add({ shape: "box", at: [4.2, 0.34, 4.0], size: [0.62, 0.2, 0.5], mat: "glass", start: T.site + 0.45 });
+  for (const [x, z] of [[3.9, 3.72], [4.7, 3.72], [3.9, 4.28], [4.7, 4.28]] as const)
+    add({ shape: "cyl", at: [x, 0.07, z], size: [0.1, 0.06, 0], rot: [Math.PI / 2, 0, 0], mat: "tyre", start: T.site + 0.4 });
+
+  // Site stock by the office: a brick pallet and a bundle of rebar
+  add({ shape: "box", at: [7.9, 0, 0.0], size: [0.6, 0.32, 0.5], mat: "brick", start: T.hut + 0.4 });
+  add({ shape: "box", at: [6.4, 0, -0.55], size: [1.6, 0.1, 0.28], mat: "rebar", start: T.hut + 0.45 });
+
+  // Tower crane on the left, its jib over the building
+  add({ shape: "box", at: [-4.5, 0, -1.4], size: [0.36, 6.2, 0.36], mat: "crane", anim: "grow", start: 0.25, dur: 1.0 });
+  add({ shape: "box", at: [-4.5, 6.2, -1.4], size: [0.5, 0.4, 0.5], mat: "crane", start: 1.2 });
+  add({ shape: "box", at: [-1.3, 6.6, -1.4], size: [6.4, 0.22, 0.22], mat: "crane", anim: "spread", start: 1.3, dur: 0.5 });
+  add({ shape: "box", at: [-6.3, 6.6, -1.4], size: [2.6, 0.2, 0.22], mat: "crane", anim: "spread", start: 1.3, dur: 0.5 });
+  add({ shape: "box", at: [-7.1, 6.25, -1.4], size: [0.7, 0.35, 0.4], mat: "concrete", start: 1.6 });
+  add({ shape: "cyl", at: [1.4, 5.6, -1.4], size: [0.012, 1.0, 0], mat: "steel", anim: "grow", start: 1.7 });
+  add({ shape: "box", at: [1.4, 5.4, -1.4], size: [0.18, 0.2, 0.18], mat: "crane", start: 1.8 });
+
+  // Ground-mounted solar array behind the site office
+  let i = 0;
+  for (const z of [-3.4, -2.2]) {
+    add({ shape: "box", at: [7.0, 0, z], size: [4.2, 0.2, 0.06], mat: "steel", anim: "spread", start: T.solar - 0.3 });
+    for (const x of [5.6, 7.0, 8.4])
+      add({ shape: "box", at: [x, 0.2, z], size: [1.25, 0.04, 0.75], rot: [-0.45, 0, 0], mat: "solar", anim: "drop", start: T.solar - 0.2 + i++ * 0.06, dur: 0.35 });
+  }
+
+  // Jamshedpur on the horizon: blocks and the steel plant's chimneys, fading into the haze
+  let seed = 7;
+  const rand = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  for (let x = -60, k = 0; x < 70; k++) {
+    const w = 2.4 + rand() * 3;
+    add({ shape: "box", at: [x + w / 2, -1.92, -42 - rand() * 8], size: [w, 3 + rand() * 10, 2.5 + rand() * 3], mat: "skyline", anim: "grow", start: 0.6 + k * 0.015, dur: 0.5 });
+    x += w + 0.6 + rand() * 2;
+  }
+  for (const [x, z] of [[24, -48], [28, -50], [-34, -46]] as const)
+    add({ shape: "cyl", at: [x, -1.92, z], size: [0.6, 20, 0], mat: "skyline", anim: "grow", start: 0.9, dur: 0.6 });
+
+  return parts;
+}
+
+export const parts: Part[] = [...diaphragmWalls(), ...frame(), ...skin(), ...roofAndSite(), ...surroundings()];
 
 /**
  * Rebar cages for one floor, drawn as lines just inside each column before its concrete.
@@ -245,5 +312,5 @@ export const FOCUS: Record<HotspotId, { dist: number; from: V3 }> = {
 export const CAMERA = {
   fov: 32,
   sketch: { position: [8.4, 6.6, 21] as V3, target: [3.0, 1.1, 0] as V3 },
-  built: { position: [14.6, 9.2, 18.2] as V3, target: [-1.4, 1.0, 0] as V3 },
+  built: { position: [13.4, 9.0, 16.8] as V3, target: [-1.4, 1.6, 0] as V3 },
 };

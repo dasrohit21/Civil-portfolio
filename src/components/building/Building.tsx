@@ -15,23 +15,38 @@ function useMaterials() {
   const mats = useMemo(() => {
     const std = (color: string, extra: THREE.MeshStandardMaterialParameters = {}) =>
       new THREE.MeshStandardMaterial({ color, roughness: 0.85, ...extra });
+    const glow = (color: string, intensity: number) => std("#2a1d10", { emissive: color, emissiveIntensity: intensity });
     const m: Record<Mat, THREE.MeshStandardMaterial> = {
-      concrete: std("#d9d4ca"),
-      foundation: std("#a8a196"),
-      glass: std("#9fc3d6", { roughness: 0.15, metalness: 0.1, transparent: true, opacity: 0.38, depthWrite: false }),
-      door: std("#3b3f46", { roughness: 0.5 }),
-      solar: std("#1f3a63", { roughness: 0.25, metalness: 0.5 }),
-      brass: std("#c08a3e", { roughness: 0.35, metalness: 0.7 }),
+      concrete: std("#e8dfcf"),
+      foundation: std("#9c8f7e"),
+      // Reflects the sunset (the scene's environment map).
+      glass: std("#86aec6", { roughness: 0.05, metalness: 0.85, transparent: true, opacity: 0.5, depthWrite: false, envMapIntensity: 0.8 }),
+      door: std("#115e59", { roughness: 0.5 }),
+      solar: std("#1a2b52", { roughness: 0.5, metalness: 0.2, envMapIntensity: 0.3 }),
+      brass: std("#c08a3e", { roughness: 0.3, metalness: 0.8 }),
       needle: std("#c2412d"),
-      green: std("#3f7d4e", { roughness: 0.5 }),
-      hut: std("#eef0f2"),
-      hutRoof: std("#2d5b9a"),
-      hat: std("#e8692c", { roughness: 0.45 }),
-      tree: std("#9cb88c"),
-      trunk: std("#8a7258"),
+      green: std("#2f7a4a", { roughness: 0.5 }),
+      hut: std("#f3efe6"),
+      hutRoof: std("#0f766e"),
+      hat: std("#f07a2a", { roughness: 0.45 }),
+      tree: std("#7f9f55"),
+      trunk: std("#7a5a3e"),
       scanner: std("#2b2f36", { roughness: 0.4 }),
       led: std("#ff4a3d", { emissive: "#ff4a3d", emissiveIntensity: 2.5 }),
-      paving: std("#e4ddcf"),
+      paving: std("#dccdb4"),
+      terracotta: std("#b95c38", { roughness: 0.8 }),
+      glow: glow("#ffb45e", 2.4),
+      grass: std("#8aa55c", { roughness: 1 }),
+      hedge: std("#5f7f3e", { roughness: 1 }),
+      crane: std("#e8b130", { roughness: 0.55, metalness: 0.2 }),
+      steel: std("#4a4d52", { roughness: 0.5, metalness: 0.6 }),
+      lamp: glow("#ffd08a", 3),
+      car: std("#a8322d", { roughness: 0.35, metalness: 0.4 }),
+      tyre: std("#1d1d1f", { roughness: 0.9 }),
+      brick: std("#b5573a"),
+      rebar: std("#8a4b2a", { roughness: 0.6, metalness: 0.5 }),
+      land: std("#a8956a", { roughness: 1 }),
+      skyline: std("#a08389", { roughness: 1 }),
     };
     return m;
   }, []);
@@ -135,7 +150,7 @@ function Plinth() {
     <group position={center}>
       <mesh receiveShadow>
         <boxGeometry args={PLINTH.size} />
-        <meshStandardMaterial ref={mat} color="#cbbfa8" roughness={0.2} transparent opacity={0} depthWrite={false} />
+        <meshStandardMaterial ref={mat} color="#c4a27a" roughness={0.2} transparent opacity={0} depthWrite={false} />
       </mesh>
       <lineSegments geometry={edgeGeo}>
         <lineBasicMaterial ref={edges} color="#8b7f6a" transparent opacity={0} />

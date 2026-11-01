@@ -5,10 +5,10 @@ import { useRef } from "react";
 import * as THREE from "three";
 import { clocks, useStore } from "@/lib/store";
 import { ANCHORS, CAMERA, FOCUS, SKETCH_SECONDS, T } from "./model";
+import { SUN_DIRECTION } from "./Sky";
 
-const PAPER = new THREE.Color("#f3eee3");
-const SKY = new THREE.Color("#e4e8ec");
 const UP = new THREE.Vector3(0, 1, 0);
+const SUN_POSITION = SUN_DIRECTION.clone().multiplyScalar(18).toArray();
 
 const v = (a: readonly number[]) => new THREE.Vector3(a[0], a[1], a[2]);
 const smooth = (k: number) => k * k * (3 - 2 * k);
@@ -16,7 +16,6 @@ const smooth = (k: number) => k * k * (3 - 2 * k);
 /** Runs the sketch and build clocks, moves the camera, and lights the model. */
 export function Rig() {
   const look = useRef(v(CAMERA.sketch.target));
-  const background = useRef<THREE.Color>(null);
 
   useFrame((state, delta) => {
     const camera = state.camera;
@@ -40,7 +39,6 @@ export function Rig() {
       }
     }
     const built = Math.min(1, clocks.build / T.end);
-    background.current?.lerpColors(PAPER, SKY, smooth(Math.min(1, clocks.build / 1.5)));
 
     // Camera: the overview (from the front while it's a sketch), or the part that's open.
     const tall = state.size.width < state.size.height * 0.95;
@@ -83,23 +81,27 @@ export function Rig() {
   const lowPower = useStore((s) => s.lowPower);
   return (
     <>
-      <color ref={background} attach="background" args={["#f3eee3"]} />
-      <hemisphereLight args={["#ffffff", "#c9bfae", 1.1]} />
-      <ambientLight intensity={0.25} />
+      {/* Golden hour: warm sky above, green bounce from the lawn below */}
+      <hemisphereLight args={["#ffd8b0", "#6b7a4c", 0.55]} />
+      <ambientLight intensity={0.12} />
+      {/* The low sun, front left: long shadows, warm faces */}
       <directionalLight
-        position={[8, 14, 10]}
-        intensity={2.2}
-        color="#fff4e2"
+        position={SUN_POSITION}
+        intensity={3.2}
+        color="#ffb46b"
         castShadow={!lowPower}
         shadow-mapSize-width={2048}
         shadow-mapSize-height={2048}
-        shadow-camera-left={-12}
-        shadow-camera-right={12}
-        shadow-camera-top={12}
-        shadow-camera-bottom={-12}
+        shadow-camera-left={-16}
+        shadow-camera-right={16}
+        shadow-camera-top={16}
+        shadow-camera-bottom={-16}
+        shadow-camera-far={60}
         shadow-bias={-0.0004}
         shadow-normalBias={0.03}
       />
+      {/* Cool light from the evening sky on the shaded side */}
+      <directionalLight position={[12, 7, -6]} intensity={0.6} color="#9db4ff" />
     </>
   );
 }
