@@ -292,6 +292,17 @@ export function sketchSegments(): [V3, V3][] {
 }
 
 /**
+ * The scale bar's other views (the site view is the overview, CAMERA.built). The camera stands
+ * at `target + offset`; phones step a little further back.
+ */
+export const SCALE_VIEWS = {
+  // Far back and high, over the Steel City's skyline and chimneys
+  city: { target: [-2, 2, -20] as V3, offset: [42, 30, 52] as V3 },
+  // Close on the front right corner, where the x-rayed columns show their steel
+  detail: { target: [2.4, 1.0, 1.6] as V3, offset: [4.6, 1.6, 5.2] as V3 },
+};
+
+/**
  * The visitors' wall along the front right of the plot: one brick per visitor, laid in courses
  * from the left. `at` is the centre of its base; the camera looks at it from `focus`.
  */

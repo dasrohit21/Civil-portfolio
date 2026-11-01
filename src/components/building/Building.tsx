@@ -80,8 +80,18 @@ function useHeatMaterials() {
   return heat;
 }
 
-/** One part of the building, appearing at its moment in the build. Structural parts show their stress during a test. */
-function PartMesh({ p, material, heat }: { p: Part; material: THREE.Material; heat?: THREE.Material[] }) {
+/** Concrete seen through at the 1:20 "Steel" scale, so the rebar cages inside show. */
+function useXrayMaterial() {
+  const xray = useMemo(() => new THREE.MeshStandardMaterial({ color: "#cfd8dc", roughness: 0.4, transparent: true, opacity: 0.16, depthWrite: false }), []);
+  useEffect(() => () => xray.dispose(), [xray]);
+  return xray;
+}
+
+/**
+ * One part of the building, appearing at its moment in the build. Structural parts show their
+ * stress during a test, and turn see-through at the 1:20 scale.
+ */
+function PartMesh({ p, material, heat, xray }: { p: Part; material: THREE.Material; heat?: THREE.Material[]; xray?: THREE.Material }) {
   const group = useRef<THREE.Group>(null);
   const mesh = useRef<THREE.Mesh>(null);
   const { geo, lift } = geometryOf(p);
@@ -99,9 +109,10 @@ function PartMesh({ p, material, heat }: { p: Part; material: THREE.Material; he
     else g.position.y = p.at[1] + (1 - easeOut(k)) * 1.8;
 
     if (heat && mesh.current) {
-      const test = useStore.getState().test;
+      const { test, scale } = useStore.getState();
       const s = test ? stressAt(test, p.at[0], p.at[1] + lift) : 0;
-      mesh.current.material = test && s > 0.04 ? heat[Math.min(heat.length - 1, Math.round(s * (heat.length - 1)))] : material;
+      mesh.current.material =
+        test && s > 0.04 ? heat[Math.min(heat.length - 1, Math.round(s * (heat.length - 1)))] : xray && scale === "detail" ? xray : material;
     }
   });
 
@@ -216,13 +227,14 @@ function useSway() {
 export function Building() {
   const mats = useMaterials();
   const heat = useHeatMaterials();
+  const xray = useXrayMaterial();
   const structure = useSway();
   return (
     <group>
       <Plinth />
       <group ref={structure}>
         {buildingParts.map((p, i) => (
-          <PartMesh key={i} p={p} material={mats[p.mat]} heat={STRUCTURAL.has(p.mat) ? heat : undefined} />
+          <PartMesh key={i} p={p} material={mats[p.mat]} heat={STRUCTURAL.has(p.mat) ? heat : undefined} xray={STRUCTURAL.has(p.mat) ? xray : undefined} />
         ))}
         <Cages />
       </group>

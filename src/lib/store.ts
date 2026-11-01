@@ -2,7 +2,7 @@
 
 import { create } from "zustand";
 import { hotspots } from "@/content/building";
-import type { Brick, HotspotId, Live, StressTestId } from "@/content/types";
+import type { Brick, HotspotId, Live, ScaleId, StressTestId } from "@/content/types";
 
 /**
  * sketch:   the pencil draws the building on paper
@@ -47,6 +47,8 @@ type State = {
   brickCount: number;
   wallConfigured: boolean | null;
   wallOpen: boolean;
+  /** The drawing scale: the city, the site (the usual view) or the steel inside the concrete. */
+  scale: ScaleId;
 
   setEnv: (env: { reducedMotion: boolean; lowPower: boolean }) => void;
   finishSketch: () => void;
@@ -70,6 +72,7 @@ type State = {
   laidBrick: (brick: Brick, count: number) => void;
   openWall: () => void;
   closeWall: () => void;
+  setScale: (scale: ScaleId) => void;
 };
 
 export const useStore = create<State>((set, get) => ({
@@ -90,6 +93,7 @@ export const useStore = create<State>((set, get) => ({
   brickCount: 0,
   wallConfigured: null,
   wallOpen: false,
+  scale: "site",
 
   setEnv: (env) => set(env),
   finishSketch: () => set({ sketchDone: true }),
@@ -98,13 +102,13 @@ export const useStore = create<State>((set, get) => ({
     set({ phase: "building", sketchDone: true });
   },
   finishBuild: () => set({ phase: "built", stampAt: Date.now() }),
-  print: () => set({ phase: "printing", focus: null, panelOpen: false, touring: false, hovered: null, test: null, result: null, wallOpen: false }),
+  print: () => set({ phase: "printing", focus: null, panelOpen: false, touring: false, hovered: null, test: null, result: null, wallOpen: false, scale: "site" }),
   finishPrint: () => set({ phase: "printed" }),
   rebuilt: () => set({ phase: "built", sketchDone: true }),
-  open: (id) => set({ focus: id, panelOpen: true, touring: false, result: null, wallOpen: false }),
+  open: (id) => set({ focus: id, panelOpen: true, touring: false, result: null, wallOpen: false, scale: "site" }),
   close: () => set({ focus: null, panelOpen: false }),
   hover: (hovered) => set({ hovered }),
-  startTour: () => set({ touring: true, tourIndex: 0, panelOpen: false, focus: hotspots[0].id }),
+  startTour: () => set({ touring: true, tourIndex: 0, panelOpen: false, focus: hotspots[0].id, scale: "site" }),
   stepTour: (dir) => {
     const next = get().tourIndex + dir;
     if (next < 0 || next >= hotspots.length) return set({ touring: false, focus: null, tourIndex: 0 });
@@ -114,13 +118,14 @@ export const useStore = create<State>((set, get) => ({
   runTest: (id) => {
     if (get().phase !== "built" || get().test) return;
     clocks.test = 0;
-    set({ test: id, result: null, focus: null, panelOpen: false, touring: false, hovered: null });
+    set({ test: id, result: null, focus: null, panelOpen: false, touring: false, hovered: null, scale: "site" });
   },
   finishTest: () => set({ result: get().test, test: null }),
   clearResult: () => set({ result: null }),
   setLive: (live) => set({ live }),
   setWall: ({ configured, count, bricks }) => set({ wallConfigured: configured, brickCount: count, bricks }),
   laidBrick: (brick, count) => set({ bricks: [brick, ...get().bricks], brickCount: count }),
-  openWall: () => set({ wallOpen: true, panelOpen: false, focus: null, touring: false, result: null }),
+  openWall: () => set({ wallOpen: true, panelOpen: false, focus: null, touring: false, result: null, scale: "site" }),
   closeWall: () => set({ wallOpen: false }),
+  setScale: (scale) => set({ scale, focus: null, panelOpen: false, touring: false, wallOpen: false }),
 }));

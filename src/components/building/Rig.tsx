@@ -5,7 +5,7 @@ import { useRef } from "react";
 import * as THREE from "three";
 import type { WeatherKind } from "@/content/types";
 import { clocks, fx, useStore } from "@/lib/store";
-import { ANCHORS, CAMERA, FOCUS, SKETCH_SECONDS, T, VISITOR_WALL } from "./model";
+import { ANCHORS, CAMERA, FOCUS, SCALE_VIEWS, SKETCH_SECONDS, T, VISITOR_WALL } from "./model";
 import { CLOUDED, SUNSET, SUN_DIRECTION } from "./Sky";
 import { TEST_SECONDS, envelope } from "./StressTest";
 
@@ -101,7 +101,11 @@ export function Rig() {
       pos = tgt.clone().add(offset);
       tgt.y -= 3;
     }
-    if (s.focus || s.wallOpen) {
+    if (s.scale !== "site" && s.phase === "built" && !s.focus && !s.wallOpen) {
+      const view = SCALE_VIEWS[s.scale];
+      tgt = v(view.target);
+      pos = tgt.clone().add(v(view.offset).multiplyScalar(tall ? 1.5 : 1));
+    } else if (s.focus || s.wallOpen) {
       const { dist, from } = s.focus ? FOCUS[s.focus] : VISITOR_WALL.focus;
       tgt = v(s.focus ? ANCHORS[s.focus] : VISITOR_WALL.focus.anchor);
       pos = tgt.clone().add(v(from).normalize().multiplyScalar(tall ? dist * 1.35 : dist));
@@ -117,7 +121,7 @@ export function Rig() {
       pos.y += state.pointer.y * 0.3;
     }
 
-    const speed = s.reducedMotion ? 60 : s.focus ? 2.4 : 1.6;
+    const speed = s.reducedMotion ? 60 : s.focus ? 2.4 : s.scale !== "site" ? 1.2 : 1.6;
     camera.position.x = THREE.MathUtils.damp(camera.position.x, pos.x, speed, dt);
     camera.position.y = THREE.MathUtils.damp(camera.position.y, pos.y, speed, dt);
     camera.position.z = THREE.MathUtils.damp(camera.position.z, pos.z, speed, dt);

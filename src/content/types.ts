@@ -15,6 +15,11 @@ export type HotspotId = "hut" | "foundation" | "structure" | "audit" | "green" |
 
 export type StressTestId = "load" | "quake" | "wind" | "flood";
 
+/** The drawing scales the scale bar moves between. */
+export type ScaleId = "city" | "site" | "detail";
+
+export type ScaleLevel = { id: ScaleId; ratio: string; label: string; caption: string };
+
 /** The kinds of weather the scene can show. */
 export type WeatherKind = "clear" | "cloudy" | "overcast" | "fog" | "rain" | "storm" | "snow";
 
