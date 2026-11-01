@@ -79,10 +79,13 @@ export function Rig() {
       sun.current.color.lerpColors(SUN_WARM, SUN_CLOUDED, fx.grey);
     }
     if (sky.current) sky.current.intensity = 0.55 + 0.3 * fx.grey + 3 * fx.flash;
+    // Fog is measured from what the camera looks at, so phones (whose camera stands further back)
+    // get the same haze as wide screens instead of losing the building in it.
     const fog = state.scene.fog as THREE.Fog | null;
     if (fog) {
-      fog.near = 30 - 24 * fx.fog;
-      fog.far = 95 - 55 * fx.fog;
+      const d = camera.position.distanceTo(look.current);
+      fog.near = THREE.MathUtils.lerp(d + 8, d * 0.6, fx.fog);
+      fog.far = THREE.MathUtils.lerp(d + 70, d + 18, fx.fog);
       fog.color.lerpColors(FOG_CLEAR, FOG_CLOUDED, fx.grey);
     }
 

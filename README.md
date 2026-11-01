@@ -63,25 +63,51 @@ It uses the Chrome installed on this computer and warns if the resume no longer 
 | Phase | What | Status |
 | --- | --- | --- |
 | 1 | Sketch → Build it → 3D building, chapters, walk, resume mode + PDF, phones | ✅ Done |
-| 2 | "Try to break it": loads, earthquake, wind, flood, stress heatmap | Planned |
-| 3 | Live sun, solar output and weather; the visitors' brick wall (database) | Planned |
+| 2 | "Try to break it": loads, earthquake, wind, flood, stress heatmap | ✅ Done |
+| 3 | Jamshedpur's live weather in the scene, the roof's solar output, the visitors' brick wall | ✅ Done (the wall needs its database keys) |
 | 4 | The 1:∞ zoom from the city down to the rebar | Optional |
 
-## The database (Phase 3)
+## Keys and settings
 
-Phases 1 and 2 need no database. Phase 3's **visitors' brick wall** does (live weather does not:
-that is a free API called from an API route). None of these files exist yet; this is where they will go,
-so the database stays in one place:
+Copy `.env.example` to `.env.local` and fill it in. `.env.local` is **never committed**
+(`.gitignore` ignores every `.env*` file except the blank `.env.example`), and the keys are only
+read on the server, so they never reach the browser. On Vercel, add the same values under
+Project → Settings → Environment Variables.
+
+| Variable | For | Without it |
+| --- | --- | --- |
+| `WEATHER_API_KEY` | Live weather from [WeatherAPI.com](https://www.weatherapi.com) | The site stays in clear golden hour and hides the live card |
+| `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` | The visitors' wall, from a free [Upstash](https://upstash.com) Redis database | The wall shows "opens soon" and nothing is stored |
+
+## Live weather (Phase 3)
+
+The scene shows **Jamshedpur's weather right now**: rain falls over the site as hard as it rains
+there, storms bring lightning, clouds grey the sunset and dim the sun, fog thickens the haze.
+A card shows the temperature, the conditions and what the model's 4.8 kWp roof would be making
+from the real solar radiation.
 
 | File | What it does |
 | --- | --- |
-| `.env.local` | The database URL and key (e.g. `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`). Never committed: `.env*` is in `.gitignore`. Add the same values in Vercel → Project → Settings → Environment Variables. |
-| `src/lib/db.ts` | **The only file that talks to the database.** Creates the client from the env vars and exports small functions like `listBricks()` and `addBrick()`. Server-only. |
-| `src/app/api/bricks/route.ts` | The API route the page calls: `GET` lists bricks, `POST` lays one (with length limits and a simple rate limit). It uses `src/lib/db.ts`. |
-| `src/app/api/sky/route.ts` | Live sun, solar output and weather from Open-Meteo. No database, no key. |
-| `src/components/ui/BrickWall.tsx` | The wall itself: shows the bricks and the "lay a brick" form. Calls `/api/bricks`, never the database directly. |
+| `src/lib/weather.ts` | Asks WeatherAPI.com (server only, cached for minutes) and turns the reply into a weather kind the scene understands |
+| `src/app/api/sky/route.ts` | `GET /api/sky`: the page's way to ask |
+| `src/components/building/Rain.tsx`, `Sky.tsx`, `Rig.tsx` | Rain and snow, the clouded sky and lightning, the dimmed sun and the fog |
+| `src/components/ui/LiveCard.tsx` | The live card (wide screens) and line (phones) |
 
-Suggested host: Supabase or Upstash (both have free tiers). Switching later means changing only `src/lib/db.ts`.
+To see other weather, add `?weather=rain` to the address (or `storm`, `fog`, `snow`, `overcast`, `cloudy`, `clear`).
+
+## The database (Phase 3)
+
+Only the **visitors' brick wall** uses a database, and only one file talks to it:
+
+| File | What it does |
+| --- | --- |
+| `.env.local` | `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` (Vercel's Upstash integration names them `KV_REST_API_URL` and `KV_REST_API_TOKEN`; both work) |
+| `src/lib/db.ts` | **The only file that talks to the database**: `listBricks()`, `countBricks()`, `addBrick()`, and `allowVisitor()` (3 bricks per address per hour). Server only. |
+| `src/app/api/bricks/route.ts` | `GET` lists the wall, `POST` lays a brick (name up to 40 characters, a line up to 80) |
+| `src/components/ui/BrickWall.tsx` | The wall panel: every brick and the "lay a brick" form. Calls `/api/bricks`, never the database. |
+| `src/components/building/VisitorWall.tsx` | The wall in 3D: one brick per visitor |
+
+Switching to another database later means changing only `src/lib/db.ts`.
 
 ## Before going live
 
@@ -89,4 +115,5 @@ Suggested host: Supabase or Upstash (both have free tiers). Switching later mean
 - [ ] Soni decides whether her **phone number** goes on the site (left off for now)
 - [ ] Soni reads the short intros in `src/content/building.ts`; they are written in her voice and need her approval
 - [ ] A portrait photo and any site photos or drawings she is allowed to share
-- [ ] Deploy on Vercel
+- [ ] Create the Upstash database and add its keys (the visitors' wall)
+- [ ] Deploy on Vercel, with `WEATHER_API_KEY` and the Upstash keys in its environment variables

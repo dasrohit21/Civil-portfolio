@@ -150,7 +150,7 @@ function plot(): Part[] {
   parts.push({ shape: "cyl", at: [7.1, 1.08, 0.85], size: [0.27, 0.02, 0], mat: "hat", anim: "pop", start: T.hut + 0.3, dur: 0.3 });
   parts.push({ shape: "dome", at: [7.1, 1.1, 0.85], size: [0.2, 0, 0], mat: "hat", anim: "pop", start: T.hut + 0.3, dur: 0.3 });
   // Model trees
-  const trees: [number, number][] = [[-4.4, 3.8], [-4.3, -3.6], [8.6, 3.9], [4.3, -3.6], [-2.4, 4.6], [8.7, -0.7]];
+  const trees: [number, number][] = [[-4.4, 3.8], [-4.3, -3.6], [8.7, 4.6], [4.3, -3.6], [-2.4, 4.6], [8.7, -0.7]];
   trees.forEach(([x, z], k) => {
     parts.push({ shape: "cyl", at: [x, 0, z], size: [0.05, 0.5, 0], mat: "trunk", anim: "grow", start: T.site + k * 0.08, dur: 0.3 });
     parts.push({ shape: "sphere", at: [x, 0.45, z], size: [0.45, 0, 0], mat: "tree", anim: "pop", start: T.site + 0.1 + k * 0.08, dur: 0.35 });
@@ -296,11 +296,11 @@ export function sketchSegments(): [V3, V3][] {
  * from the left. `at` is the centre of its base; the camera looks at it from `focus`.
  */
 export const VISITOR_WALL = {
-  at: [7.3, 0, 4.95] as V3,
-  length: 3.4,
+  at: [7.2, 0, 3.6] as V3,
+  length: 3.2,
   brick: [0.22, 0.09, 0.12] as V3,
   courses: 9,
-  focus: { anchor: [7.3, 0.45, 4.95] as V3, dist: 7, from: [0.15, 0.45, 1] as V3 },
+  focus: { anchor: [7.2, 0.45, 3.6] as V3, dist: 7, from: [0.15, 0.45, 1] as V3 },
 };
 
 /** Where the dot sits and the camera looks for each part of the building. */
