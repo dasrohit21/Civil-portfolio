@@ -536,6 +536,89 @@ body {
   100% { transform: translateX(-50%) rotate(-6deg) scale(1); opacity: 0; }
 }
 
+/* ─── Try to break it ─────────────────────────────────────── */
+
+.stress {
+  position: absolute;
+  top: 76px;
+  right: 24px;
+  z-index: 11;
+  width: 270px;
+  padding: 16px 18px;
+  background: var(--card);
+  border: 1.5px solid var(--line);
+  box-shadow: 0 10px 30px rgba(31, 38, 51, 0.08);
+}
+.stress-title {
+  font-weight: 800;
+  font-stretch: 75%;
+  font-size: 26px;
+  text-transform: uppercase;
+  line-height: 1;
+}
+.stress-sign {
+  font-family: var(--font-hand), cursive;
+  color: var(--blue);
+  font-size: 15px;
+  margin-top: 2px;
+}
+.stress-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-top: 12px;
+}
+.stress-buttons button {
+  padding: 8px 6px;
+  font-size: 13px;
+  font-weight: 600;
+  border: 1.5px solid var(--line);
+  background: #fff;
+}
+.stress-buttons button:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.stress-text {
+  margin-top: 10px;
+  font-size: 14px;
+  line-height: 1.45;
+}
+.stress-legend {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  font-size: 11px;
+  color: var(--ink-dim);
+}
+.stress-bar {
+  flex: 1;
+  height: 8px;
+  background: linear-gradient(90deg, #2b6cb0, #2aa3b8, #3fae6b, #e6c229, #ef8a2c, #d6452f);
+}
+.stress-held {
+  font-weight: 800;
+  font-stretch: 75%;
+  font-size: 30px;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.stress-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+}
+.test-tag {
+  padding: 3px 8px;
+  font-weight: 700;
+  font-size: 13px;
+  background: var(--ink);
+  color: var(--paper);
+  white-space: nowrap;
+  transition: opacity 0.2s;
+}
+
 /* ─── Phones ──────────────────────────────────────────────── */
 
 @media (max-width: 720px) {
@@ -598,5 +681,33 @@ body {
   }
   .stamp-main {
     font-size: 22px;
+  }
+  .stress {
+    top: 60px;
+    left: 12px;
+    right: 12px;
+    width: auto;
+    padding: 10px 12px;
+  }
+  .stress-title {
+    font-size: 18px;
+  }
+  .stress-sign {
+    display: none;
+  }
+  .stress-buttons {
+    grid-template-columns: repeat(4, 1fr);
+    margin-top: 8px;
+  }
+  .stress-buttons button {
+    padding: 6px 2px;
+    font-size: 11px;
+  }
+  .stress-held {
+    font-size: 22px;
+  }
+  .stress-text {
+    font-size: 13px;
+    margin-top: 6px;
   }
 }

@@ -6,6 +6,7 @@ import * as THREE from "three";
 import { clocks, useStore } from "@/lib/store";
 import { ANCHORS, CAMERA, FOCUS, SKETCH_SECONDS, T } from "./model";
 import { SUN_DIRECTION } from "./Sky";
+import { TEST_SECONDS, envelope } from "./StressTest";
 
 const UP = new THREE.Vector3(0, 1, 0);
 const SUN_POSITION = SUN_DIRECTION.clone().multiplyScalar(18).toArray();
@@ -37,6 +38,10 @@ export function Rig() {
         clocks.build = 0;
         s.finishPrint();
       }
+    }
+    if (s.test) {
+      clocks.test += dt;
+      if (clocks.test >= TEST_SECONDS) s.finishTest();
     }
     const built = Math.min(1, clocks.build / T.end);
 
@@ -76,6 +81,12 @@ export function Rig() {
     look.current.y = THREE.MathUtils.damp(look.current.y, tgt.y, speed, dt);
     look.current.z = THREE.MathUtils.damp(look.current.z, tgt.z, speed, dt);
     camera.lookAt(look.current);
+    // The earthquake shakes the camera too.
+    if (s.test === "quake" && !s.reducedMotion) {
+      const shake = 0.06 * envelope();
+      camera.position.x += Math.sin(clocks.test * 37) * shake;
+      camera.position.y += Math.cos(clocks.test * 29) * shake * 0.6;
+    }
   });
 
   const lowPower = useStore((s) => s.lowPower);

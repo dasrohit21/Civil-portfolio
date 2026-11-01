@@ -7,7 +7,7 @@ export const stressTests: StressTest[] = [
     label: "Load",
     icon: "🏋️",
     running: "150 tonnes on the roof…",
-    result: "Held. Columns, beams and footings carry the load all the way down to the ground.",
+    result: "Columns, beams and footings carry the load all the way down to the ground.",
     hotspot: "structure",
   },
   {
@@ -15,7 +15,7 @@ export const stressTests: StressTest[] = [
     label: "Earthquake",
     icon: "🌍",
     running: "The ground is shaking…",
-    result: "Held. Deep diaphragm walls and footings keep it anchored while the ground moves.",
+    result: "Deep diaphragm walls and footings keep it anchored while the ground moves.",
     hotspot: "foundation",
   },
   {
@@ -23,7 +23,7 @@ export const stressTests: StressTest[] = [
     label: "Wind",
     icon: "🌪️",
     running: "A storm is pushing on the facade…",
-    result: "Held. The frame takes the wind, and the roof's solar array is designed to stay down.",
+    result: "The frame takes the wind, and the roof's solar array is designed to stay down.",
     hotspot: "solar",
   },
   {
@@ -31,7 +31,7 @@ export const stressTests: StressTest[] = [
     label: "Flood",
     icon: "🌊",
     running: "The water is rising…",
-    result: "Held. Water audits find where water gets in before it does any damage.",
+    result: "Water audits find where water gets in before it does any damage.",
     hotspot: "audit",
   },
 ];

@@ -12,6 +12,7 @@ import { TitleBlock } from "@/components/sketch/TitleBlock";
 import { IdentityCard } from "@/components/ui/IdentityCard";
 import { Panel } from "@/components/ui/Panel";
 import { Stamp } from "@/components/ui/Stamp";
+import { StressTools } from "@/components/ui/StressTools";
 import { TourCard } from "@/components/ui/TourCard";
 
 const Scene = dynamic(() => import("@/components/building/Scene"), { ssr: false });
@@ -41,7 +42,7 @@ function step(dir: 1 | -1) {
     else if (dir === 1) s.build();
     return;
   }
-  if (s.phase !== "built" || s.panelOpen) return;
+  if (s.phase !== "built" || s.panelOpen || s.test) return;
   if (s.touring) s.stepTour(dir);
   else if (dir === 1) s.startTour();
 }
@@ -141,6 +142,7 @@ export function Experience() {
       <TitleBlock />
       <IdentityCard />
       <TourCard />
+      <StressTools />
       <Panel />
       <Stamp />
     </main>
