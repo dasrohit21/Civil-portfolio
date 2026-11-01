@@ -13,6 +13,7 @@ import { TitleBlock } from "@/components/sketch/TitleBlock";
 import { BrickWall } from "@/components/ui/BrickWall";
 import { IdentityCard } from "@/components/ui/IdentityCard";
 import { LiveCard } from "@/components/ui/LiveCard";
+import { ScaleBar } from "@/components/ui/ScaleBar";
 import { Panel } from "@/components/ui/Panel";
 import { Stamp } from "@/components/ui/Stamp";
 import { StressTools } from "@/components/ui/StressTools";
@@ -181,6 +182,7 @@ export function Experience() {
       <TourCard />
       <StressTools />
       <LiveCard />
+      <ScaleBar />
       <Panel />
       <BrickWall />
       <Stamp />

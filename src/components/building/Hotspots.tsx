@@ -7,7 +7,7 @@ import { ANCHORS } from "./model";
 
 /** A glowing dot on each part of the finished building. Hover shows its name; a click opens it. */
 export function Hotspots() {
-  const show = useStore((s) => s.phase === "built" && !s.panelOpen && !s.test);
+  const show = useStore((s) => s.phase === "built" && !s.panelOpen && !s.test && s.scale === "site");
   const hovered = useStore((s) => s.hovered);
   const focus = useStore((s) => s.focus);
   const touring = useStore((s) => s.touring);

@@ -296,10 +296,10 @@ export function sketchSegments(): [V3, V3][] {
  * at `target + offset`; phones step a little further back.
  */
 export const SCALE_VIEWS = {
-  // Far back and high, over the Steel City's skyline and chimneys
-  city: { target: [-2, 2, -20] as V3, offset: [42, 30, 52] as V3 },
+  // High above: the site small in the middle, the Steel City's skyline and chimneys behind it
+  city: { target: [0, 0, -7], offset: [30, 60, 42] } as { target: V3; offset: V3 },
   // Close on the front right corner, where the x-rayed columns show their steel
-  detail: { target: [2.4, 1.0, 1.6] as V3, offset: [4.6, 1.6, 5.2] as V3 },
+  detail: { target: [2.2, 1.4, 1.4], offset: [5.8, 2.4, 6.6] } as { target: V3; offset: V3 },
 };
 
 /**
