@@ -65,7 +65,11 @@ It uses the Chrome installed on this computer and warns if the resume no longer 
 | 1 | Sketch → Build it → 3D building, chapters, walk, resume mode + PDF, phones | ✅ Done |
 | 2 | "Try to break it": loads, earthquake, wind, flood, stress heatmap | ✅ Done |
 | 3 | Jamshedpur's live weather in the scene, the roof's solar output, the visitors' brick wall | ✅ Done (the wall needs its database keys) |
-| 4 | The 1:∞ zoom from the city down to the rebar | Optional |
+| 4 | The scale bar: 1:5000 city, 1:500 site, 1:20 steel (see-through concrete, rebar inside) | ✅ Done |
+
+**Where the newer parts live:** the stress tests' text in `src/content/tests.ts` (effects in
+`src/components/building/StressTest.tsx`, toolbar in `src/components/ui/StressTools.tsx`); the scales'
+captions in `src/content/scales.ts` (camera views in `SCALE_VIEWS` in `model.ts`, the bar in `src/components/ui/ScaleBar.tsx`).
 
 ## Keys and settings
 
