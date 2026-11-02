@@ -13,6 +13,7 @@ import { TitleBlock } from "@/components/sketch/TitleBlock";
 import { BrickWall } from "@/components/ui/BrickWall";
 import { IdentityCard } from "@/components/ui/IdentityCard";
 import { LiveCard } from "@/components/ui/LiveCard";
+import { LiveWall } from "@/components/ui/LiveWall";
 import { ScaleBar } from "@/components/ui/ScaleBar";
 import { Panel } from "@/components/ui/Panel";
 import { Stamp } from "@/components/ui/Stamp";
@@ -71,6 +72,7 @@ function step(dir: 1 | -1) {
 export function Experience() {
   const router = useRouter();
   const phase = useStore((s) => s.phase);
+  const wallConfigured = useStore((s) => s.wallConfigured);
   const panelOpen = useStore((s) => s.panelOpen || s.wallOpen);
   const webgl = useSyncExternalStore(noSubscribe, hasWebGL, () => null);
 
@@ -185,6 +187,7 @@ export function Experience() {
       <ScaleBar />
       <Panel />
       <BrickWall />
+      {wallConfigured ? <LiveWall /> : null}
       <Stamp />
     </main>
   );
