@@ -3,10 +3,10 @@ import { defineConfig } from "@neon/config/v1";
 export default defineConfig({
   // Declare your Neon services here
   preview: {
-    realtime: true,
+    // Every origin the site runs on; add the Vercel URL when it's deployed
+    realtime: { allowedOrigins: ["http://localhost:3000"] },
   },
   auth: true,
-  aiGateway: true,
   functions: {
     hello: { name: "Hello World", source: "./hello.ts" },
   },

@@ -91,7 +91,7 @@ export function BrickWall() {
         {bricks.length ? (
           <ul className="bricks" aria-label="Bricks in the wall, newest first">
             {bricks.map((b) => (
-              <li key={`${b.at}-${b.name}`} title={b.note || undefined}>
+              <li key={b.id} title={b.note || undefined}>
                 <span className="brick-name">{b.name}</span>
                 {b.note ? <span className="brick-note">{b.note}</span> : null}
               </li>

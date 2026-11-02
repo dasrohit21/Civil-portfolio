@@ -1,6 +1,5 @@
 import { connection } from "next/server";
-import type { Brick } from "@/content/types";
-import { addBrick, allowVisitor, countBricks, dbConfigured, listBricks } from "@/lib/db";
+import { addBrick, countBricks, dbConfigured, listBricks } from "@/lib/db";
 
 /** Keep only plain text, without control characters or angle brackets, cut to `max`. */
 const clean = (v: unknown, max: number) =>
@@ -31,9 +30,8 @@ export async function POST(request: Request) {
 
   const address = request.headers.get("x-forwarded-for")?.split(",")[0].trim() || "unknown";
   try {
-    if (!(await allowVisitor(address))) return Response.json({ error: "That's plenty of bricks for now. Come back in an hour." }, { status: 429 });
-    const brick: Brick = { name, note, at: Date.now() };
-    await addBrick(brick);
+    const brick = await addBrick(name, note, address);
+    if (!brick) return Response.json({ error: "That's plenty of bricks for now. Come back in an hour." }, { status: 429 });
     return Response.json({ brick, count: await countBricks() }, { status: 201 });
   } catch {
     return Response.json({ error: "The brick didn't stick. Try again in a moment." }, { status: 502 });

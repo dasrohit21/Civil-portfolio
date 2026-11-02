@@ -1,58 +1,65 @@
-import type { Brick } from "@/content/types";
+import { createHash } from "node:crypto";
+import { attachDatabasePool } from "@vercel/functions";
+import { Pool } from "pg";
+import type { Brick, HotspotId } from "@/content/types";
 
 /**
- * The only file that talks to the database: an Upstash Redis store, used over its REST API
- * (no SDK). Server only: the keys come from the environment and must never reach the browser.
+ * The only file that talks to the database: Neon Postgres over node-postgres, with Vercel's
+ * pool handling. Server only: the connection string must never reach the browser.
  *
- * Set in .env.local, and in Vercel → Project → Settings → Environment Variables:
- *   UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN
- * (Vercel's Upstash integration names them KV_REST_API_URL and KV_REST_API_TOKEN; both work.)
- * Without them the wall shows as "opening soon" and nothing is stored.
+ * Set in .env.local (`neon deploy` / `neon env pull` writes it), and on Vercel:
+ *   DATABASE_URL (pooled). Migrations use DATABASE_URL_UNPOOLED: `npm run db:migrate`.
+ * Without it the wall shows as "opening soon" and nothing is stored.
  */
-const url = process.env.UPSTASH_REDIS_REST_URL ?? process.env.KV_REST_API_URL;
-const token = process.env.UPSTASH_REDIS_REST_TOKEN ?? process.env.KV_REST_API_TOKEN;
+const url = process.env.DATABASE_URL;
+// Neon URLs say sslmode=require; verify-full keeps the same checks without pg's warning.
+const pool = url ? new Pool({ connectionString: url.replace("sslmode=require", "sslmode=verify-full") }) : null;
+if (pool) {
+  attachDatabasePool(pool);
+  // An idle connection dropping (the compute scaling to zero) mustn't crash the server
+  pool.on("error", (error) => console.error(error));
+}
 
-const KEY = "bricks";
-/** The wall keeps the newest bricks; older ones drop off the end. */
-const MAX_BRICKS = 2000;
 /** Bricks one address may lay per hour. */
 const PER_HOUR = 3;
 
-export const dbConfigured = () => Boolean(url && token);
+export const dbConfigured = () => pool !== null;
 
-async function redis<T>(command: (string | number)[]): Promise<T> {
-  const res = await fetch(url!, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${token}` },
-    body: JSON.stringify(command),
-    cache: "no-store",
-  });
-  if (!res.ok) throw new Error(`Database answered ${res.status}`);
-  return (await res.json()).result as T;
+const query = <T extends object>(sql: string, params: unknown[] = []) => pool!.query<T>(sql, params).then((r) => r.rows);
+
+/** Bricks as the site uses them; `at` is milliseconds. Shared with the live query. */
+export const BRICK_COLUMNS = "id, name, note, (extract(epoch from created_at) * 1000)::float8 as at";
+
+export const listBricks = (limit = 300) =>
+  query<Brick>(`select ${BRICK_COLUMNS} from bricks order by created_at desc limit $1`, [limit]);
+
+export const countBricks = () => query<{ n: number }>("select count(*)::int as n from bricks").then(([r]) => r.n);
+
+/** Lays a brick unless this address has laid PER_HOUR in the last hour; null when it has. */
+export async function addBrick(name: string, note: string, address: string): Promise<Brick | null> {
+  const visitor = createHash("sha256").update(address).digest("hex").slice(0, 32);
+  const [brick] = await query<Brick>(
+    `insert into bricks (name, note, visitor)
+     select $1, $2, $3
+     where (select count(*) from bricks where visitor = $3 and created_at > now() - interval '1 hour') < $4
+     returning ${BRICK_COLUMNS}`,
+    [name, note, visitor, PER_HOUR],
+  );
+  return brick ?? null;
 }
 
-export async function listBricks(limit = 300): Promise<Brick[]> {
-  const raw = await redis<string[]>(["LRANGE", KEY, 0, limit - 1]);
-  return raw.flatMap((r) => {
-    try {
-      return [JSON.parse(r) as Brick];
-    } catch {
-      return [];
-    }
-  });
-}
+export const deleteBrick = (id: string) => query("delete from bricks where id = $1", [id]);
 
-export const countBricks = () => redis<number>(["LLEN", KEY]);
+export type PhotoRow = { id: string; part: HotspotId; key: string; caption: string };
 
-export async function addBrick(brick: Brick) {
-  await redis(["LPUSH", KEY, JSON.stringify(brick)]);
-  await redis(["LTRIM", KEY, 0, MAX_BRICKS - 1]);
-}
+export const listPhotos = (part?: HotspotId) =>
+  part
+    ? query<PhotoRow>("select id, part, key, caption from photos where part = $1 order by created_at desc", [part])
+    : query<PhotoRow>("select id, part, key, caption from photos order by created_at desc");
 
-/** True while this address is under its hourly limit. */
-export async function allowVisitor(address: string) {
-  const key = `rate:${address}`;
-  const n = await redis<number>(["INCR", key]);
-  if (n === 1) await redis(["EXPIRE", key, 3600]);
-  return n <= PER_HOUR;
-}
+export const addPhoto = (part: HotspotId, key: string, caption: string) =>
+  query<PhotoRow>("insert into photos (part, key, caption) values ($1, $2, $3) returning id, part, key, caption", [part, key, caption]).then(([r]) => r);
+
+/** Removes the row and returns its object key, so the caller can delete the file. */
+export const deletePhoto = (id: string) =>
+  query<{ key: string }>("delete from photos where id = $1 returning key", [id]).then(([r]) => r?.key ?? null);

@@ -40,7 +40,10 @@ export type Live = {
 };
 
 /** One brick in the visitors' wall. */
-export type Brick = { name: string; note: string; at: number };
+export type Brick = { id: string; name: string; note: string; at: number };
+
+/** A site photo or drawing from the studio, shown in its chapter. `url` is short-lived. */
+export type Photo = { id: string; part: HotspotId; caption: string; url: string };
 
 /** One of the "Try to break it" tests. */
 export type StressTest = {
