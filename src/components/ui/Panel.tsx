@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { hotspotById, hotspots } from "@/content/building";
 import { jobById } from "@/content/profile";
+import type { HotspotId, Photo } from "@/content/types";
 import { useStore } from "@/lib/store";
 
 /** The open part of the building: its story, the job behind it, and the skills it used. */
@@ -65,6 +66,8 @@ export function Panel() {
             </ul>
           ) : null}
 
+          {open ? <ChapterPhotos part={h.id} /> : null}
+
           {next ? (
             <button type="button" className="panel-next" tabIndex={t} onClick={() => useStore.getState().open(next.id)}>
               Next: {next.label} →
@@ -73,5 +76,38 @@ export function Panel() {
         </div>
       ) : null}
     </aside>
+  );
+}
+
+/** Site photos and drawings Soni added to this chapter in the studio. */
+function ChapterPhotos({ part }: { part: HotspotId }) {
+  const [photos, setPhotos] = useState<{ part: HotspotId; list: Photo[] } | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    fetch(`/api/photos?part=${part}`)
+      .then((r) => (r.ok ? r.json() : []))
+      .then((list: Photo[]) => alive && setPhotos({ part, list }))
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [part]);
+
+  const list = photos?.part === part ? photos.list : [];
+  if (!list.length) return null;
+  return (
+    <ul className="chapter-photos" aria-label="From site">
+      {list.map((p) => (
+        <li key={p.id}>
+          <figure>
+            {/* Signed links from private storage, so next/image's optimiser can't cache them */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={p.url} alt={p.caption || "Site photo"} loading="lazy" />
+            {p.caption ? <figcaption>{p.caption}</figcaption> : null}
+          </figure>
+        </li>
+      ))}
+    </ul>
   );
 }
