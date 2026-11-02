@@ -12,6 +12,35 @@ const easeOut = (k: number) => 1 - Math.pow(1 - k, 3);
 const backOut = (k: number) => 1 + 2.2 * Math.pow(k - 1, 3) + 1.2 * Math.pow(k - 1, 2);
 const progress = (start: number, dur: number) => clamp01((clocks.build - start) / dur);
 
+/** A PV module's face: aluminium frame, 6 × 5 cells, two busbars per cell. */
+function solarCells() {
+  const cols = 6, rows = 5, cell = 40, gap = 3, frame = 8;
+  const canvas = document.createElement("canvas");
+  canvas.width = frame * 2 + cols * cell + (cols - 1) * gap;
+  canvas.height = frame * 2 + rows * cell + (rows - 1) * gap;
+  const g = canvas.getContext("2d")!;
+  g.fillStyle = "#b8bec7";
+  g.fillRect(0, 0, canvas.width, canvas.height);
+  g.fillStyle = "#8e9bb4";
+  g.fillRect(frame, frame, canvas.width - frame * 2, canvas.height - frame * 2);
+  for (let r = 0; r < rows; r++)
+    for (let c = 0; c < cols; c++) {
+      const x = frame + c * (cell + gap), y = frame + r * (cell + gap);
+      const shade = g.createLinearGradient(x, y, x + cell, y + cell);
+      shade.addColorStop(0, "#2a4378");
+      shade.addColorStop(1, "#18284f");
+      g.fillStyle = shade;
+      g.fillRect(x, y, cell, cell);
+      g.fillStyle = "#5d72a0";
+      g.fillRect(x + cell / 3 - 1, y, 1.5, cell);
+      g.fillRect(x + (cell * 2) / 3 - 1, y, 1.5, cell);
+    }
+  const map = new THREE.CanvasTexture(canvas);
+  map.colorSpace = THREE.SRGBColorSpace;
+  map.anisotropy = 8;
+  return map;
+}
+
 function useMaterials() {
   const mats = useMemo(() => {
     const std = (color: string, extra: THREE.MeshStandardMaterialParameters = {}) =>
@@ -23,7 +52,7 @@ function useMaterials() {
       // Reflects the sunset (the scene's environment map).
       glass: std("#86aec6", { roughness: 0.05, metalness: 0.85, transparent: true, opacity: 0.5, depthWrite: false, envMapIntensity: 0.8 }),
       door: std("#115e59", { roughness: 0.5 }),
-      solar: std("#1a2b52", { roughness: 0.5, metalness: 0.2, envMapIntensity: 0.3 }),
+      solar: std("#ffffff", { map: solarCells(), roughness: 0.45, metalness: 0.2, envMapIntensity: 0.3 }),
       brass: std("#c08a3e", { roughness: 0.3, metalness: 0.8 }),
       needle: std("#c2412d"),
       green: std("#2f7a4a", { roughness: 0.5 }),
@@ -51,7 +80,7 @@ function useMaterials() {
     };
     return m;
   }, []);
-  useEffect(() => () => Object.values(mats).forEach((m) => m.dispose()), [mats]);
+  useEffect(() => () => Object.values(mats).forEach((m) => (m.map?.dispose(), m.dispose())), [mats]);
   return mats;
 }
 
