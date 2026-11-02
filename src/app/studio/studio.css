@@ -1,0 +1,92 @@
+/* Soni's studio: plain paper and ink, like the resume. */
+
+.studio {
+  max-width: 760px;
+  min-height: 100dvh;
+  margin: 0 auto;
+  padding: 24px 16px 64px;
+  color: var(--ink);
+}
+.studio-bar {
+  margin-bottom: 24px;
+}
+.studio-title {
+  font-size: clamp(40px, 8vw, 64px);
+  margin-bottom: 12px;
+}
+.studio-h2 {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.studio-note {
+  color: var(--ink-dim);
+  font-size: 14px;
+}
+.studio-desk {
+  display: grid;
+  gap: 20px;
+  margin-top: 20px;
+}
+.studio-card {
+  padding: 20px;
+  background: var(--card);
+  border: 1px solid var(--line);
+}
+.studio-form {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+  max-width: 420px;
+}
+.studio-form label {
+  display: grid;
+  gap: 4px;
+}
+.studio-form input,
+.studio-form select {
+  padding: 9px 12px;
+  font-size: 15px;
+  background: #fff;
+  border: 1.5px solid var(--line);
+}
+.studio-form input:focus,
+.studio-form select:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+.studio-error {
+  margin-top: 12px;
+  color: #b42318;
+  font-weight: 600;
+}
+.link-quiet {
+  color: var(--accent);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.studio-photos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+  margin-top: 20px;
+}
+.studio-photos img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border: 1px solid var(--line);
+}
+.studio-photos p {
+  font-size: 13px;
+  margin: 4px 0;
+}
+.studio-bricks li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 15px;
+}
