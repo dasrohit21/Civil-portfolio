@@ -159,7 +159,7 @@ set up your own email provider: https://neon.com/docs/auth/production-checklist.
 
 ## Before going live
 
-- [ ] Soni confirms her **LinkedIn** address (the one on the CV looks generic) — `src/content/profile.ts`
+- [x] Soni's **LinkedIn** address — `src/content/profile.ts`
 - [ ] Soni decides whether her **phone number** goes on the site (left off for now)
 - [ ] Soni reads the short intros in `src/content/building.ts`; they are written in her voice and need her approval
 - [ ] A portrait photo and any site photos or drawings she is allowed to share

@@ -10,10 +10,9 @@ export const profile = {
   summary:
     "A structurally-grounded Civil and Design Engineer with a career spanning multi-disciplinary environments at SPD Engineering & Consultancy, Energy Design Works, and Amar Found. I specialise in structural layout design, solar PV systems engineering, and green building compliance. Currently at Manupama Technologies Pvt. Ltd., Jamshedpur, I conduct structural and water audits, perform Non-Destructive Testing (NDT), and support IGBC certification — ensuring that quality, safety, and sustainability standards are practically integrated into every project I undertake.",
   // The phone number on the CV is left off the site until Soni says it can be public.
-  // TODO: confirm the LinkedIn address with Soni; the one on the CV looks generic.
   contact: [
     { label: "sonikumari2002238@gmail.com", short: "Email", href: "mailto:sonikumari2002238@gmail.com" },
-    { label: "linkedin.com/in/soni-kumari", short: "LinkedIn", href: "https://www.linkedin.com/in/soni-kumari" },
+    { label: "linkedin.com/in/soni-kumari-878031391", short: "LinkedIn", href: "https://www.linkedin.com/in/soni-kumari-878031391" },
   ],
   resumePdf: "/soni-kumari-resume.pdf",
 };
