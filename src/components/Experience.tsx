@@ -7,7 +7,8 @@ import { useEffect, useSyncExternalStore } from "react";
 import { profile } from "@/content/profile";
 import type { Live, WeatherKind } from "@/content/types";
 import { wheelSteps } from "@/lib/gestures";
-import { clocks, useStore } from "@/lib/store";
+import { restorePlace } from "@/lib/place";
+import { clocks, useStore, type PlaceChoice } from "@/lib/store";
 import { T } from "@/components/building/model";
 import { TitleBlock } from "@/components/sketch/TitleBlock";
 import { BrickWall } from "@/components/ui/BrickWall";
@@ -39,18 +40,36 @@ const noSubscribe = () => () => {};
 const KINDS: WeatherKind[] = ["clear", "cloudy", "overcast", "fog", "rain", "storm", "snow"];
 
 /**
- * Jamshedpur's weather. `?weather=rain` (or storm, fog, snow, overcast, cloudy, clear) previews a
- * kind of weather over the real reading, to see how the site looks in it.
+ * The weather for the sky: where the visitor is (from their network, or exactly if they shared
+ * it) or Soni's Jamshedpur. `?weather=rain` (or storm, fog, snow, overcast, cloudy, clear)
+ * previews a kind of weather over the real reading, to see how the site looks in it.
  */
-async function loadLive(): Promise<Live | null> {
-  const live: Live | null = await fetch("/api/sky")
+async function loadLive(place: PlaceChoice, coords: { lat: number; lon: number } | null): Promise<Live | null> {
+  const query = place === "home" ? "?place=home" : place === "exact" && coords ? `?lat=${coords.lat}&lon=${coords.lon}` : "";
+  const live: Live | null = await fetch(`/api/sky${query}`)
     .then((r) => (r.ok ? r.json() : null))
     .catch(() => null);
   const preview = new URLSearchParams(window.location.search).get("weather") as WeatherKind | null;
   if (!preview || !KINDS.includes(preview)) return live;
-  const base: Live = live ?? { tempC: 24, weather: "", kind: "clear", intensity: 0, isDay: true, solarKw: 2.4, solarPeakKw: 4.8, sunrise: "05:50 AM", sunset: "05:06 PM" };
+  const base: Live = live ?? {
+    place: { name: "Jamshedpur", country: "India", lat: 22.8, lon: 86.18, tz: "Asia/Kolkata" },
+    source: "home",
+    tempC: 24,
+    weather: "",
+    kind: "clear",
+    intensity: 0,
+    isDay: true,
+    solarKw: 2.4,
+    solarPeakKw: 4.8,
+    sunrise: "05:50 AM",
+    sunset: "05:06 PM",
+    moon: null,
+    cloud: 10,
+    windKph: 8,
+  };
   const falling = preview === "rain" || preview === "storm" || preview === "snow";
-  return { ...base, kind: preview, weather: `${preview[0].toUpperCase()}${preview.slice(1)} (preview)`, intensity: falling ? 0.8 : 0 };
+  const cloud = { clear: 5, cloudy: 55, overcast: 95, fog: 70, rain: 90, storm: 100, snow: 90 }[preview];
+  return { ...base, kind: preview, weather: `${preview[0].toUpperCase()}${preview.slice(1)} (preview)`, intensity: falling ? 0.8 : 0, cloud };
 }
 
 /** Elements that scroll by themselves, so scrolling them never moves through the building. */
@@ -73,7 +92,10 @@ export function Experience() {
   const router = useRouter();
   const phase = useStore((s) => s.phase);
   const wallConfigured = useStore((s) => s.wallConfigured);
+  const place = useStore((s) => s.place);
+  const coords = useStore((s) => s.coords);
   const panelOpen = useStore((s) => s.panelOpen || s.wallOpen);
+  const dark = useStore((s) => s.dark);
   const webgl = useSyncExternalStore(noSubscribe, hasWebGL, () => null);
 
   // Arriving (or coming back from /resume, which keeps this page mounted but hidden).
@@ -88,21 +110,30 @@ export function Experience() {
       s.rebuilt();
     }
     if (!hasWebGL()) s.rebuilt();
+    restorePlace();
   }, []);
 
-  // Live data: Jamshedpur's weather (refreshed every 10 minutes) and the visitors' wall.
+  // Live data: the weather for the sky (refreshed every 10 minutes, and when the visitor picks
+  // another place) and the visitors' wall.
   useEffect(() => {
     let alive = true;
-    const refresh = () => void loadLive().then((live) => alive && useStore.getState().setLive(live));
+    const refresh = () => void loadLive(place, coords).then((live) => alive && useStore.getState().setLive(live));
     refresh();
     const timer = window.setInterval(refresh, 10 * 60 * 1000);
+    return () => {
+      alive = false;
+      window.clearInterval(timer);
+    };
+  }, [place, coords]);
+
+  useEffect(() => {
+    let alive = true;
     fetch("/api/bricks")
       .then((r) => r.json())
       .then((wall) => alive && typeof wall?.configured === "boolean" && useStore.getState().setWall(wall))
       .catch(() => {});
     return () => {
       alive = false;
-      window.clearInterval(timer);
     };
   }, []);
 
@@ -162,7 +193,7 @@ export function Experience() {
 
   const built = phase === "built";
   return (
-    <main className="experience" data-phase={phase} data-panel={panelOpen ? "open" : "closed"}>
+    <main className="experience" data-phase={phase} data-panel={panelOpen ? "open" : "closed"} data-sky={dark ? "night" : "day"}>
       <div className="canvas-wrap">{webgl ? <Scene /> : null}</div>
 
       <header className="topbar">

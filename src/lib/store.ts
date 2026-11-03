@@ -11,6 +11,8 @@ import type { Brick, HotspotId, Live, ScaleId, StressTestId } from "@/content/ty
  * printing: "Print drawings" was pressed; the model folds back to paper
  * printed:  it's paper again; time to open /resume
  */
+export type PlaceChoice = "near" | "exact" | "home";
+
 export type Phase = "sketch" | "building" | "built" | "printing" | "printed";
 
 /**
@@ -40,8 +42,16 @@ type State = {
   /** The "Try to break it" test that is running, and the last one that held. */
   test: StressTestId | null;
   result: StressTestId | null;
-  /** Jamshedpur right now (null until it arrives, or if the weather service is down). */
+  /** The weather where the visitor is, or in Jamshedpur (null until it arrives, or if the weather service is down). */
   live: Live | null;
+  /** Whose sky to show: the visitor's (by their network, or exactly if they shared it) or Soni's. */
+  place: PlaceChoice;
+  /** The visitor's position, when they shared it. */
+  coords: { lat: number; lon: number } | null;
+  /** Changes when the sky has changed enough to redraw the reflections. */
+  skyKey: string;
+  /** Dark out: text over the sky turns light. */
+  dark: boolean;
   /** The visitors' wall: newest bricks first. `wallConfigured` is null until we've asked. */
   bricks: Brick[];
   brickCount: number;
@@ -68,6 +78,9 @@ type State = {
   finishTest: () => void;
   clearResult: () => void;
   setLive: (live: Live | null) => void;
+  setPlace: (place: PlaceChoice, coords: { lat: number; lon: number } | null) => void;
+  setSkyKey: (skyKey: string) => void;
+  setDark: (dark: boolean) => void;
   setWall: (wall: { configured: boolean; count: number; bricks: Brick[] }) => void;
   laidBrick: (brick: Brick, count: number) => void;
   openWall: () => void;
@@ -89,6 +102,10 @@ export const useStore = create<State>((set, get) => ({
   test: null,
   result: null,
   live: null,
+  place: "near",
+  coords: null,
+  skyKey: "",
+  dark: false,
   bricks: [],
   brickCount: 0,
   wallConfigured: null,
@@ -123,6 +140,9 @@ export const useStore = create<State>((set, get) => ({
   finishTest: () => set({ result: get().test, test: null }),
   clearResult: () => set({ result: null }),
   setLive: (live) => set({ live }),
+  setPlace: (place, coords) => set({ place, coords }),
+  setSkyKey: (skyKey) => set({ skyKey }),
+  setDark: (dark) => set({ dark }),
   setWall: ({ configured, count, bricks }) => set({ wallConfigured: configured, brickCount: count, bricks }),
   // The live wall may have delivered this brick already.
   laidBrick: (brick, count) => {

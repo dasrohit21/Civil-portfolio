@@ -163,8 +163,9 @@ function surroundings(): Part[] {
   const parts: Part[] = [];
   const add = (p: Omit<Part, "anim" | "dur"> & Partial<Pick<Part, "anim" | "dur">>) => parts.push({ anim: "pop", dur: 0.3, ...p });
 
-  // The land runs to the horizon; the model's lawn sits on top of the plinth.
-  add({ shape: "box", at: [0, -1.94, -6], size: [160, 0.02, 120], mat: "land", anim: "spread", start: 0, dur: 1.2 });
+  // The land runs back to just behind the city, where the sky's horizon is (see daylight.ts);
+  // the model's lawn sits on top of the plinth.
+  add({ shape: "box", at: [0, -1.94, 0.5], size: [160, 0.02, 107], mat: "land", anim: "spread", start: 0, dur: 1.2 });
   add({ shape: "box", at: [PLINTH.at[0], -0.03, PLINTH.at[2]], size: [PLINTH.size[0] - 0.1, 0.026, PLINTH.size[2] - 0.1], mat: "grass", anim: "spread", start: 0.15, dur: 0.6 });
 
   // Path from the forecourt to the site office, hedges along the front, street lamps
@@ -208,7 +209,7 @@ function surroundings(): Part[] {
   const rand = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
   for (let x = -60, k = 0; x < 70; k++) {
     const w = 2.4 + rand() * 3;
-    add({ shape: "box", at: [x + w / 2, -1.92, -42 - rand() * 8], size: [w, 3 + rand() * 10, 2.5 + rand() * 3], mat: "skyline", anim: "grow", start: 0.6 + k * 0.015, dur: 0.5 });
+    add({ shape: "box", at: [x + w / 2, -1.92, -42 - rand() * 8], size: [w, 1.5 + rand() * 5.5, 2.5 + rand() * 3], mat: "skyline", anim: "grow", start: 0.6 + k * 0.015, dur: 0.5 });
     x += w + 0.6 + rand() * 2;
   }
   for (const [x, z] of [[24, -48], [28, -50], [-34, -46]] as const)
@@ -343,5 +344,5 @@ export const FOCUS: Record<HotspotId, { dist: number; from: V3 }> = {
 export const CAMERA = {
   fov: 32,
   sketch: { position: [8.4, 6.6, 21] as V3, target: [3.0, 1.1, 0] as V3 },
-  built: { position: [13.4, 9.0, 16.8] as V3, target: [-1.4, 1.6, 0] as V3 },
+  built: { position: [13.4, 8.0, 16.8] as V3, target: [-1.4, 2.0, 0] as V3 },
 };

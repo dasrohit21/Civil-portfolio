@@ -119,6 +119,11 @@ body {
   font-stretch: 75%;
   text-transform: uppercase;
   letter-spacing: 0.04em;
+  transition: color 1s;
+}
+/* After dark the name sits on the night sky */
+.experience[data-sky="night"] .topbar-name {
+  color: var(--paper);
 }
 .no-webgl {
   position: absolute;
@@ -698,7 +703,7 @@ body {
   line-height: 1.4;
 }
 
-/* ─── Live from Jamshedpur ────────────────────────────────── */
+/* ─── Live sky: the visitor's weather and time of day ─────── */
 
 .live {
   position: absolute;
@@ -732,6 +737,11 @@ body {
   text-transform: uppercase;
   line-height: 1.1;
 }
+.live-time {
+  margin-top: 4px;
+  font-size: 13px;
+  font-weight: 600;
+}
 .live-solar {
   margin-top: 6px;
   font-size: 13px;
@@ -751,11 +761,34 @@ body {
   font-size: 11px;
   color: var(--ink-dim);
 }
+.live-places {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin-top: 8px;
+}
+.live-places button {
+  padding: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.live-places-note {
+  width: 100%;
+  font-size: 11px;
+  color: #b42318;
+}
 .live-line {
   display: none;
   margin-bottom: 8px;
   font-size: 12px;
   color: var(--ink-dim);
+}
+.live-line .live-places {
+  margin-top: 2px;
 }
 
 /* ─── The visitors' wall ──────────────────────────────────── */
