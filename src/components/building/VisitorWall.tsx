@@ -22,13 +22,18 @@ function brickMatrix(n: number, m: THREE.Matrix4) {
   return m.makeTranslation(x, y, at[2]);
 }
 
-/** The visitors' wall: a footing, then one brick for every visitor who laid one. */
+/**
+ * The visitors' wall: a footing, then one brick for every visitor who laid one. The rest of the
+ * course being laid shows as faint outlines, so even an empty wall is ready for the first brick.
+ */
 export function VisitorWall() {
   const count = useStore((s) => s.brickCount);
   const showTag = useStore((s) => s.phase === "built" && !s.panelOpen && !s.wallOpen && !s.test);
   const bricks = useRef<THREE.InstancedMesh>(null);
+  const ghosts = useRef<THREE.InstancedMesh>(null);
   const group = useRef<THREE.Group>(null);
   const shown = Math.min(count, MAX);
+  const courseEnd = Math.min(MAX, (Math.floor(shown / PER_COURSE) + 1) * PER_COURSE);
   const colors = useMemo(() => SHADES.map((c) => new THREE.Color(c)), []);
 
   useEffect(() => {
@@ -42,7 +47,15 @@ export function VisitorWall() {
     mesh.count = shown;
     mesh.instanceMatrix.needsUpdate = true;
     if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
-  }, [shown, colors]);
+    // Three measures an instanced mesh once; without this, bricks laid after the first look are culled.
+    mesh.computeBoundingSphere();
+    const empty = ghosts.current;
+    if (!empty) return;
+    for (let n = shown; n < courseEnd; n++) empty.setMatrixAt(n - shown, brickMatrix(n, m));
+    empty.count = courseEnd - shown;
+    empty.instanceMatrix.needsUpdate = true;
+    empty.computeBoundingSphere();
+  }, [shown, courseEnd, colors]);
 
   useFrame(() => {
     if (group.current) group.current.visible = clocks.build > T.site;
@@ -59,6 +72,10 @@ export function VisitorWall() {
       <instancedMesh ref={bricks} args={[undefined, undefined, MAX]} castShadow receiveShadow onClick={open}>
         <boxGeometry args={brick} />
         <meshStandardMaterial roughness={0.85} />
+      </instancedMesh>
+      <instancedMesh ref={ghosts} args={[undefined, undefined, PER_COURSE]} onClick={open}>
+        <boxGeometry args={brick} />
+        <meshStandardMaterial color="#b5573a" transparent opacity={0.28} depthWrite={false} roughness={1} />
       </instancedMesh>
       {showTag ? (
         <Html position={[at[0], at[1] + 0.35 + Math.ceil(shown / PER_COURSE) * 0.1, at[2]]} center zIndexRange={[4, 0]}>

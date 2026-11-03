@@ -124,7 +124,11 @@ export const useStore = create<State>((set, get) => ({
   clearResult: () => set({ result: null }),
   setLive: (live) => set({ live }),
   setWall: ({ configured, count, bricks }) => set({ wallConfigured: configured, brickCount: count, bricks }),
-  laidBrick: (brick, count) => set({ bricks: [brick, ...get().bricks], brickCount: count }),
+  // The live wall may have delivered this brick already.
+  laidBrick: (brick, count) => {
+    const bricks = get().bricks;
+    set({ bricks: bricks.some((b) => b.id === brick.id) ? bricks : [brick, ...bricks], brickCount: Math.max(count, get().brickCount) });
+  },
   openWall: () => set({ wallOpen: true, panelOpen: false, focus: null, touring: false, result: null, scale: "site" }),
   closeWall: () => set({ wallOpen: false }),
   setScale: (scale) => set({ scale, focus: null, panelOpen: false, touring: false, wallOpen: false }),
