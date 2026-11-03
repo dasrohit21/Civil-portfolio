@@ -23,8 +23,11 @@ export type ScaleLevel = { id: ScaleId; ratio: string; label: string; caption: s
 /** The kinds of weather the scene can show. */
 export type WeatherKind = "clear" | "cloudy" | "overcast" | "fog" | "rain" | "storm" | "snow";
 
-/** Right now in Jamshedpur, from /api/sky. */
+/** Right now where the visitor is (or in Jamshedpur), from /api/sky. */
 export type Live = {
+  place: { name: string; country: string; lat: number; lon: number; tz: string };
+  /** near: from the visitor's network; exact: they shared their location; home: Soni's Jamshedpur. */
+  source: "near" | "exact" | "home";
   tempC: number;
   /** In words, as the weather service puts it ("Patchy rain nearby"). */
   weather: string;
@@ -37,6 +40,11 @@ export type Live = {
   solarPeakKw: number;
   sunrise: string;
   sunset: string;
+  /** Tonight's moon: its age through the month, 0 new .. 0.5 full .. 1 (null if unknown). */
+  moon: number | null;
+  /** Cloud cover, 0..100 %. */
+  cloud: number;
+  windKph: number;
 };
 
 /** One brick in the visitors' wall. */
