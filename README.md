@@ -72,10 +72,12 @@ It uses the Chrome installed on this computer and warns if the resume no longer 
 | 4 | The scale bar: 1:5000 city, 1:500 site, 1:20 steel (see-through concrete, rebar inside) | ✅ Done |
 | 5 | Neon: the wall in Postgres and live for everyone, Soni's studio (sign-in, remove bricks, add site photos) | ✅ Done |
 | 6 | The visitor's own sky: their weather and time of day (morning, afternoon, evening, night), sun, moon, stars and clouds | ✅ Done |
+| 7 | Jamshedpur round the site: streets and avenues with moving traffic, parks, buildings with windows that light up at night | ✅ Done |
 
 **Where the newer parts live:** the stress tests' text in `src/content/tests.ts` (effects in
 `src/components/building/StressTest.tsx`, toolbar in `src/components/ui/StressTools.tsx`); the scales'
-captions in `src/content/scales.ts` (camera views in `SCALE_VIEWS` in `model.ts`, the bar in `src/components/ui/ScaleBar.tsx`).
+captions in `src/content/scales.ts` (camera views in `SCALE_VIEWS` in `model.ts`, the bar in `src/components/ui/ScaleBar.tsx`);
+the city round the site in `src/components/building/City.tsx` (layout from a fixed seed, one instanced mesh per kind of thing).
 
 ## Keys and settings
 
