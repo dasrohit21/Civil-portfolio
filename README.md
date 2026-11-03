@@ -71,6 +71,7 @@ It uses the Chrome installed on this computer and warns if the resume no longer 
 | 3 | Jamshedpur's live weather in the scene, the roof's solar output, the visitors' brick wall | ✅ Done |
 | 4 | The scale bar: 1:5000 city, 1:500 site, 1:20 steel (see-through concrete, rebar inside) | ✅ Done |
 | 5 | Neon: the wall in Postgres and live for everyone, Soni's studio (sign-in, remove bricks, add site photos) | ✅ Done |
+| 6 | The visitor's own sky: their weather and time of day (morning, afternoon, evening, night), sun, moon, stars and clouds | ✅ Done |
 
 **Where the newer parts live:** the stress tests' text in `src/content/tests.ts` (effects in
 `src/components/building/StressTest.tsx`, toolbar in `src/components/ui/StressTools.tsx`); the scales'
@@ -85,7 +86,7 @@ Project → Settings → Environment Variables.
 
 | Variable | For | Without it |
 | --- | --- | --- |
-| `WEATHER_API_KEY` | Live weather from [WeatherAPI.com](https://www.weatherapi.com) | The site stays in clear golden hour and hides the live card |
+| `WEATHER_API_KEY` | Live weather from [WeatherAPI.com](https://www.weatherapi.com) | No weather or live card; the sky still follows the time of day in Jamshedpur |
 | `DATABASE_URL`, `DATABASE_URL_UNPOOLED` | The visitors' wall and the photo list (Neon Postgres) | The wall shows "opens soon" and nothing is stored |
 | `NEON_REALTIME_URL`, `NEON_REALTIME_SECRET` | New bricks appear for everyone, live | The wall loads once per visit |
 | `NEON_AUTH_BASE_URL`, `NEON_AUTH_COOKIE_SECRET` | Signing in to the studio | The studio says sign-in isn't set up |
@@ -94,21 +95,35 @@ Project → Settings → Environment Variables.
 `neon deploy` writes every Neon variable into `.env.local` and keeps the lines it doesn't manage.
 `NEON_AUTH_COOKIE_SECRET` is ours: any random 32+ characters (see `.env.example`).
 
-## Live weather (Phase 3)
+## The live sky (Phases 3 and 6)
 
-The scene shows **Jamshedpur's weather right now**: rain falls over the site as hard as it rains
-there, storms bring lightning, clouds grey the sunset and dim the sun, fog thickens the haze.
-A card shows the temperature, the conditions and what the model's 4.8 kWp roof would be making
-from the real solar radiation.
+The sky is **the visitor's own, right now**. The site finds where they are from their network
+(Vercel's geolocation headers, so no prompt), and they can tap **Use my exact location** to share
+it from the browser instead, or **Show Soni's sky** for Jamshedpur. When the place can't be told
+(running locally, for one), it's Jamshedpur. The choice is remembered on that device.
+
+- **Time of day:** the sun's real position there, worked out every frame from the clock, sets
+  the sky, the light and the haze: morning light from the right, a blue afternoon, golden
+  evening from the left, then blue hour and night. At night the moon (in tonight's real phase,
+  from the weather service) lights the scene, stars come out over clear skies, and the rooms and
+  street lamps glow.
+- **Weather:** clouds drift on the real wind, as many as the real cloud cover; rain and snow fall
+  as hard as they fall there, storms bring lightning, fog thickens the haze.
+- **The card** shows the place, the temperature and conditions, the part of the day and the local
+  time, and what the model's 4.8 kWp roof would be making from the real solar radiation.
 
 | File | What it does |
 | --- | --- |
-| `src/lib/weather.ts` | Asks WeatherAPI.com (server only, cached for minutes) and turns the reply into a weather kind the scene understands |
-| `src/app/api/sky/route.ts` | `GET /api/sky`: the page's way to ask |
-| `src/components/building/Rain.tsx`, `Sky.tsx`, `Rig.tsx` | Rain and snow, the clouded sky and lightning, the dimmed sun and the fog |
-| `src/components/ui/LiveCard.tsx` | The live card (wide screens) and line (phones) |
+| `src/lib/weather.ts` | Asks WeatherAPI.com for a place (server only, each place cached for minutes) and turns the reply into what the scene understands |
+| `src/app/api/sky/route.ts` | `GET /api/sky` (`?lat=&lon=` for an exact place, `?place=home` for Jamshedpur): coordinates are rounded to about 10 km |
+| `src/lib/sky.ts` | The sun's position, the part of the day and the moon's phase for any place and moment (plain maths) |
+| `src/lib/place.ts` | The visitor's choice of place, and the browser's location when they share it |
+| `src/components/building/daylight.ts` | The sky's colours and light for each height of the sun, and where the sun and moon show |
+| `src/components/building/Sky.tsx`, `Rig.tsx`, `Rain.tsx` | The sky dome (sun, moon, stars, clouds), the lights and fog, rain and snow |
+| `src/components/ui/LiveCard.tsx` | The live card (wide screens) and line (phones), with the place buttons |
 
-To see other weather, add `?weather=rain` to the address (or `storm`, `fog`, `snow`, `overcast`, `cloudy`, `clear`).
+To preview, add to the address `?time=morning` (or `afternoon`, `evening`, `night`) and/or
+`?weather=rain` (or `storm`, `fog`, `snow`, `overcast`, `cloudy`, `clear`), e.g. `/?time=night&weather=storm`.
 
 ## Neon (Phase 5)
 
