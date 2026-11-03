@@ -4,6 +4,7 @@ import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { clocks, useStore } from "@/lib/store";
+import { daylight } from "./daylight";
 import { FLOOR_COUNT, PLINTH, ROOF, T, buildingParts, cages, siteParts, type Mat, type Part } from "./model";
 import { envelope, stressAt } from "./StressTest";
 
@@ -49,7 +50,7 @@ function useMaterials() {
     const m: Record<Mat, THREE.MeshStandardMaterial> = {
       concrete: std("#e8dfcf"),
       foundation: std("#9c8f7e"),
-      // Reflects the sunset (the scene's environment map).
+      // Reflects the sky (the scene's environment map).
       glass: std("#86aec6", { roughness: 0.05, metalness: 0.85, transparent: true, opacity: 0.5, depthWrite: false, envMapIntensity: 0.8 }),
       door: std("#115e59", { roughness: 0.5 }),
       solar: std("#ffffff", { map: solarCells(), roughness: 0.45, metalness: 0.2, envMapIntensity: 0.3 }),
@@ -81,6 +82,16 @@ function useMaterials() {
     return m;
   }, []);
   useEffect(() => () => Object.values(mats).forEach((m) => (m.map?.dispose(), m.dispose())), [mats]);
+  // Rooms and street lamps shine brighter as it gets dark.
+  const lights = useRef<{ glow: THREE.MeshStandardMaterial; lamp: THREE.MeshStandardMaterial } | null>(null);
+  useEffect(() => {
+    lights.current = { glow: mats.glow, lamp: mats.lamp };
+  }, [mats]);
+  useFrame(() => {
+    if (!lights.current) return;
+    lights.current.glow.emissiveIntensity = 1.4 + 2.2 * daylight.night;
+    lights.current.lamp.emissiveIntensity = 0.5 + 3.5 * daylight.night;
+  });
   return mats;
 }
 

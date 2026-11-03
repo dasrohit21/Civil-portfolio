@@ -1,20 +1,19 @@
 "use client";
 
 import { useFrame } from "@react-three/fiber";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import * as THREE from "three";
 import type { WeatherKind } from "@/content/types";
 import { clocks, fx, useStore } from "@/lib/store";
+import { previewPeriod } from "@/lib/sky";
+import { daylight, updateDaylight } from "./daylight";
 import { ANCHORS, CAMERA, FOCUS, SCALE_VIEWS, SKETCH_SECONDS, T, VISITOR_WALL } from "./model";
-import { CLOUDED, SUNSET, SUN_DIRECTION } from "./Sky";
 import { TEST_SECONDS, envelope } from "./StressTest";
 
 const UP = new THREE.Vector3(0, 1, 0);
-const SUN_POSITION = SUN_DIRECTION.clone().multiplyScalar(18).toArray();
-const SUN_WARM = new THREE.Color("#ffb46b");
 const SUN_CLOUDED = new THREE.Color("#d9dde4");
-const FOG_CLEAR = new THREE.Color(SUNSET.horizon);
-const FOG_CLOUDED = new THREE.Color(CLOUDED.horizon);
+/** How bright the reflections are by day; at night they dim with the sky. */
+const ENV_INTENSITY = 0.6;
 
 /** How grey and how foggy each kind of weather makes the scene. */
 const LOOK: Record<WeatherKind, { grey: number; fog: number }> = {
@@ -27,7 +26,7 @@ const LOOK: Record<WeatherKind, { grey: number; fog: number }> = {
   snow: { grey: 0.6, fog: 0.5 },
 };
 
-/** Ease the scene towards Jamshedpur's weather, and throw the odd bolt of lightning in a storm. */
+/** Ease the scene towards the visitor's weather, and throw the odd bolt of lightning in a storm. */
 function updateWeather(kind: WeatherKind, dt: number) {
   const look = LOOK[kind];
   fx.grey = THREE.MathUtils.damp(fx.grey, look.grey, 1.2, dt);
@@ -44,6 +43,8 @@ export function Rig() {
   const look = useRef(v(CAMERA.sketch.target));
   const sun = useRef<THREE.DirectionalLight>(null);
   const sky = useRef<THREE.HemisphereLight>(null);
+  const fill = useRef<THREE.DirectionalLight>(null);
+  const [preview] = useState(previewPeriod);
 
   useFrame((state, delta) => {
     const camera = state.camera;
@@ -72,13 +73,30 @@ export function Rig() {
     }
     const built = Math.min(1, clocks.build / T.end);
 
-    // Weather: only once the building has risen out of the paper.
+    // Weather, and the time of day: only once the building has risen out of the paper.
     updateWeather(clocks.build > 1 ? (s.live?.kind ?? "clear") : "clear", dt);
+    updateDaylight(dt, s.live, THREE.MathUtils.smoothstep(clocks.build, 0, 1.8), s.reducedMotion, preview);
+    const p = daylight.palette;
+    const day = 1 - daylight.night;
     if (sun.current) {
-      sun.current.intensity = 3.2 * (1 - 0.72 * fx.grey);
-      sun.current.color.lerpColors(SUN_WARM, SUN_CLOUDED, fx.grey);
+      sun.current.position.copy(daylight.lightDir).multiplyScalar(18);
+      sun.current.intensity = daylight.lightI * (1 - 0.72 * fx.grey);
+      sun.current.color.copy(p.light).lerp(SUN_CLOUDED, fx.grey * day);
     }
-    if (sky.current) sky.current.intensity = 0.55 + 0.3 * fx.grey + 3 * fx.flash;
+    if (sky.current) {
+      sky.current.color.copy(p.hemi);
+      sky.current.groundColor.copy(p.ground);
+      sky.current.intensity = daylight.hemiI + 0.3 * fx.grey * day + 3 * fx.flash;
+    }
+    if (fill.current) {
+      fill.current.color.copy(p.fill);
+      fill.current.intensity = daylight.fillI;
+    }
+    state.scene.environmentIntensity = ENV_INTENSITY * (0.2 + 0.8 * day);
+    // Redraw the reflections when the sky has changed enough to see.
+    const skyKey = `${Math.round(daylight.elevation / 3)}:${Math.round(daylight.cover * 4)}`;
+    if (skyKey !== s.skyKey) s.setSkyKey(skyKey);
+    if (daylight.night > 0.5 !== s.dark) s.setDark(daylight.night > 0.5);
     // Fog is measured from what the camera looks at, so phones (whose camera stands further back)
     // get the same haze as wide screens instead of losing the building in it.
     const fog = state.scene.fog as THREE.Fog | null;
@@ -86,7 +104,7 @@ export function Rig() {
       const d = camera.position.distanceTo(look.current);
       fog.near = THREE.MathUtils.lerp(d + 8, d * 0.6, fx.fog);
       fog.far = THREE.MathUtils.lerp(d + 70, d + 18, fx.fog);
-      fog.color.lerpColors(FOG_CLEAR, FOG_CLOUDED, fx.grey);
+      fog.color.lerpColors(p.horizon, p.cloudedHorizon, fx.grey);
     }
 
     // Camera: the overview (from the front while it's a sketch), or the part that's open.
@@ -140,13 +158,14 @@ export function Rig() {
   const lowPower = useStore((s) => s.lowPower);
   return (
     <>
-      {/* Golden hour: warm sky above, green bounce from the lawn below */}
+      {/* The sky above, green bounce from the lawn below; both follow the time of day */}
       <hemisphereLight ref={sky} args={["#ffd8b0", "#6b7a4c", 0.55]} />
       <ambientLight intensity={0.12} />
-      {/* The low sun, front left: long shadows, warm faces. Clouds dim it and cool it. */}
+      {/* The sun from the front, right in the morning and left at dusk, or the moon at night.
+          Clouds dim it and cool it. */}
       <directionalLight
         ref={sun}
-        position={SUN_POSITION}
+        position={daylight.lightDir.clone().multiplyScalar(18)}
         intensity={3.2}
         color="#ffb46b"
         castShadow={!lowPower}
@@ -160,8 +179,8 @@ export function Rig() {
         shadow-bias={-0.0004}
         shadow-normalBias={0.03}
       />
-      {/* Cool light from the evening sky on the shaded side */}
-      <directionalLight position={[12, 7, -6]} intensity={0.6} color="#9db4ff" />
+      {/* Cool light from the open sky on the shaded side */}
+      <directionalLight ref={fill} position={[12, 7, -6]} intensity={0.6} color="#9db4ff" />
     </>
   );
 }
