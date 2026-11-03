@@ -1,8 +1,9 @@
 "use client";
 
-import { useFrame } from "@react-three/fiber";
-import { useRef, useState } from "react";
+import { useFrame, useThree } from "@react-three/fiber";
+import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import type { WeatherKind } from "@/content/types";
 import { clocks, fx, useStore } from "@/lib/store";
 import { previewPeriod } from "@/lib/sky";
@@ -45,6 +46,26 @@ export function Rig() {
   const sky = useRef<THREE.HemisphereLight>(null);
   const fill = useRef<THREE.DirectionalLight>(null);
   const [preview] = useState(previewPeriod);
+  // The mouse: drag to turn round the building, right-drag (or shift-drag) to slide across the
+  // site. Once the visitor drags, the view is theirs until they open a part or pick another scale.
+  // The wheel and touch stay as they were: they walk the tour.
+  const controls = useRef<OrbitControls>(null);
+  const free = useRef(false);
+  const view = useRef("");
+  const eye = useThree((s) => s.camera);
+  const canvas = useThree((s) => s.gl.domElement);
+  useEffect(() => {
+    const c = new OrbitControls(eye, canvas);
+    c.enableZoom = false;
+    c.enableDamping = true;
+    c.screenSpacePanning = false;
+    c.touches = { ONE: null, TWO: null };
+    c.maxPolarAngle = Math.PI * 0.47; // never below the ground
+    c.maxTargetRadius = 18; // nor off the edge of the city
+    c.addEventListener("start", () => (free.current = true));
+    controls.current = c;
+    return () => c.dispose();
+  }, [eye, canvas]);
 
   useFrame((state, delta) => {
     const camera = state.camera;
@@ -107,6 +128,20 @@ export function Rig() {
       fog.color.lerpColors(p.horizon, p.cloudedHorizon, fx.grey);
     }
 
+    // Opening a part, or another scale, takes the camera back from the visitor's mouse.
+    const key = `${s.phase} ${s.scale} ${s.focus} ${s.panelOpen} ${s.wallOpen}`;
+    if (key !== view.current) {
+      view.current = key;
+      free.current = false;
+    }
+    const orbit = controls.current;
+    if (orbit) orbit.enabled = s.phase === "built";
+    if (orbit && free.current) {
+      orbit.update(dt);
+      look.current.copy(orbit.target);
+      return;
+    }
+
     // Camera: the overview (from the front while it's a sketch), or the part that's open.
     const tall = state.size.width < state.size.height * 0.95;
     let tgt = v(CAMERA.sketch.target).lerp(v(CAMERA.built.target), smooth(built));
@@ -147,6 +182,7 @@ export function Rig() {
     look.current.y = THREE.MathUtils.damp(look.current.y, tgt.y, speed, dt);
     look.current.z = THREE.MathUtils.damp(look.current.z, tgt.z, speed, dt);
     camera.lookAt(look.current);
+    orbit?.target.copy(look.current);
     // The earthquake shakes the camera too.
     if (s.test === "quake" && !s.reducedMotion) {
       const shake = 0.06 * envelope();

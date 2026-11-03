@@ -1,6 +1,6 @@
 "use client";
 
-import { useFrame } from "@react-three/fiber";
+import { useFrame, type ThreeEvent } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { clocks, useStore } from "@/lib/store";
@@ -62,18 +62,20 @@ export function VisitorWall() {
   });
 
   const open = () => useStore.getState().openWall();
+  // A drag that turns the view and happens to end on the wall isn't a click on it.
+  const tap = (e: ThreeEvent<MouseEvent>) => e.delta <= 2 && open();
   return (
     <group ref={group} visible={false}>
       {/* Footing */}
-      <mesh position={[at[0], at[1] + 0.03, at[2]]} receiveShadow castShadow onClick={open}>
+      <mesh position={[at[0], at[1] + 0.03, at[2]]} receiveShadow castShadow onClick={tap}>
         <boxGeometry args={[length + 0.1, 0.06, brick[2] + 0.06]} />
         <meshStandardMaterial color="#9c8f7e" roughness={0.9} />
       </mesh>
-      <instancedMesh ref={bricks} args={[undefined, undefined, MAX]} castShadow receiveShadow onClick={open}>
+      <instancedMesh ref={bricks} args={[undefined, undefined, MAX]} castShadow receiveShadow onClick={tap}>
         <boxGeometry args={brick} />
         <meshStandardMaterial roughness={0.85} />
       </instancedMesh>
-      <instancedMesh ref={ghosts} args={[undefined, undefined, PER_COURSE]} onClick={open}>
+      <instancedMesh ref={ghosts} args={[undefined, undefined, PER_COURSE]} onClick={tap}>
         <boxGeometry args={brick} />
         <meshStandardMaterial color="#b5573a" transparent opacity={0.28} depthWrite={false} roughness={1} />
       </instancedMesh>

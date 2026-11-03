@@ -99,6 +99,13 @@ body {
   position: absolute;
   inset: 0;
 }
+/* Once it's built, the mouse can turn the view */
+.experience[data-phase="built"] .canvas-wrap canvas {
+  cursor: grab;
+}
+.experience[data-phase="built"] .canvas-wrap canvas:active {
+  cursor: grabbing;
+}
 .topbar {
   position: absolute;
   top: 0;
