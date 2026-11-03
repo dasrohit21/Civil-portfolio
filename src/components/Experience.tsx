@@ -211,10 +211,13 @@ export function Experience() {
 
       {webgl === false ? <p className="no-webgl">This browser can&apos;t show the 3D model, so here is the short version.</p> : null}
       <TitleBlock />
-      <IdentityCard />
+      {/* Wide screens: the live sky at the top of the left column, who she is at the bottom */}
+      <div className="left-stack">
+        <LiveCard />
+        <IdentityCard />
+      </div>
       <TourCard />
       <StressTools />
-      <LiveCard />
       <ScaleBar />
       <Panel />
       <BrickWall />

@@ -99,10 +99,11 @@ Project → Settings → Environment Variables.
 
 ## The live sky (Phases 3 and 6)
 
-The sky is **the visitor's own, right now**. The site finds where they are from their network
-(Vercel's geolocation headers, so no prompt), and they can tap **Use my exact location** to share
-it from the browser instead, or **Show Soni's sky** for Jamshedpur. When the place can't be told
-(running locally, for one), it's Jamshedpur. The choice is remembered on that device.
+The sky is **the visitor's own, right now**. On arrival the site asks the browser for their
+location; until they answer, or if they say no, it uses their network's location (Vercel's
+geolocation headers). **Use my exact location** asks again, and **Show Soni's sky** switches to
+Jamshedpur (remembered on that device, so she isn't asked next time). When the place can't be
+told at all (running locally without sharing it, for one), it's Jamshedpur.
 
 - **Time of day:** the sun's real position there, worked out every frame from the clock, sets
   the sky, the light and the haze: morning light from the right, a blue afternoon, golden

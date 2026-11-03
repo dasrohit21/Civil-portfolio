@@ -25,11 +25,15 @@ export async function choosePlace(place: PlaceChoice) {
   useStore.getState().setPlace(place, coords);
 }
 
-/** On arrival: the choice made last time. If the location can't be had now, the network's will do. */
+/**
+ * On arrival: Soni's sky if that was the choice last time; otherwise ask the browser where the
+ * visitor is, so the sky is theirs exactly. Until they answer, or if they say no, their network's
+ * location stands in.
+ */
 export function restorePlace() {
   let saved: string | null = null;
   try {
     saved = localStorage.getItem(KEY);
   } catch {}
-  if (saved === "home" || saved === "exact") choosePlace(saved).catch(() => {});
+  choosePlace(saved === "home" ? "home" : "exact").catch(() => {});
 }
