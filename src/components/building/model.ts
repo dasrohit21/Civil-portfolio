@@ -298,7 +298,7 @@ export function sketchSegments(): [V3, V3][] {
  */
 export const SCALE_VIEWS = {
   // High above: the site small in the middle, the Steel City's skyline and chimneys behind it
-  city: { target: [0, 0, -7], offset: [30, 60, 42] } as { target: V3; offset: V3 },
+  city: { target: [0, 0, -5], offset: [21, 40, 29] } as { target: V3; offset: V3 },
   // Close on the front right corner, where the x-rayed columns show their steel
   detail: { target: [2.2, 1.4, 1.4], offset: [5.8, 2.4, 6.6] } as { target: V3; offset: V3 },
 };

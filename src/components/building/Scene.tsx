@@ -5,6 +5,7 @@ import { Canvas } from "@react-three/fiber";
 import { useStore } from "@/lib/store";
 import { SketchLines } from "@/components/sketch/SketchLines";
 import { Building } from "./Building";
+import { City } from "./City";
 import { Hotspots } from "./Hotspots";
 import { Rain } from "./Rain";
 import { CAMERA } from "./model";
@@ -45,6 +46,7 @@ export default function Scene() {
       <Rig />
       <SketchLines />
       <Building />
+      <City />
       <StressEffects />
       <Rain />
       <VisitorWall />
