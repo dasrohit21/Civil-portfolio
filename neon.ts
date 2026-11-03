@@ -3,8 +3,8 @@ import { defineConfig } from "@neon/config/v1";
 export default defineConfig({
   // Declare your Neon services here
   preview: {
-    // Every origin the site runs on; add the Vercel URL when it's deployed
-    realtime: { allowedOrigins: ["http://localhost:3000"] },
+    // Every origin the site runs on
+    realtime: { allowedOrigins: ["http://localhost:3000", "https://civil-portfolio-sigma.vercel.app"] },
   },
   auth: true,
   functions: {
