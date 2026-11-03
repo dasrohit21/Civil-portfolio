@@ -1,9 +1,9 @@
 "use client";
 
-import { Html } from "@react-three/drei";
 import { hotspots } from "@/content/building";
 import { useStore } from "@/lib/store";
 import { ANCHORS } from "./model";
+import { Label } from "./Label";
 
 /** A glowing dot on each part of the finished building. Hover shows its name; a click opens it. */
 export function Hotspots() {
@@ -18,7 +18,7 @@ export function Hotspots() {
       {hotspots.map((h) => {
         const here = touring && focus === h.id;
         return (
-          <Html key={h.id} position={ANCHORS[h.id]} center zIndexRange={[5, 0]}>
+          <Label key={h.id} position={ANCHORS[h.id]} zIndex={5}>
             <button
               type="button"
               tabIndex={-1}
@@ -39,7 +39,7 @@ export function Hotspots() {
                 </span>
               ) : null}
             </button>
-          </Html>
+          </Label>
         );
       })}
     </>

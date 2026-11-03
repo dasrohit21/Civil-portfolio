@@ -1,11 +1,11 @@
 "use client";
 
-import { Html } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { clocks, useStore } from "@/lib/store";
 import { T, VISITOR_WALL } from "./model";
+import { Label } from "./Label";
 
 const { at, length, brick, courses } = VISITOR_WALL;
 const STEP = brick[0] + 0.02;
@@ -78,11 +78,11 @@ export function VisitorWall() {
         <meshStandardMaterial color="#b5573a" transparent opacity={0.28} depthWrite={false} roughness={1} />
       </instancedMesh>
       {showTag ? (
-        <Html position={[at[0], at[1] + 0.35 + Math.ceil(shown / PER_COURSE) * 0.1, at[2]]} center zIndexRange={[4, 0]}>
+        <Label position={[at[0], at[1] + 0.35 + Math.ceil(shown / PER_COURSE) * 0.1, at[2]]} zIndex={4}>
           <button type="button" className="wall-tag" onClick={open}>
             🧱 Visitors&apos; wall{count ? ` · ${count}` : ""}
           </button>
-        </Html>
+        </Label>
       ) : null}
     </group>
   );

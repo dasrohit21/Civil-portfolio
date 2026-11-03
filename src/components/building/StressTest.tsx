@@ -1,12 +1,12 @@
 "use client";
 
-import { Html } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import type { StressTestId } from "@/content/types";
 import { clocks, useStore } from "@/lib/store";
 import { PLINTH, ROOF } from "./model";
+import { Label } from "./Label";
 
 /**
  * "Try to break it". These are effects, not a structural analysis: the heatmap shows where a real
@@ -62,9 +62,9 @@ function Weights() {
           <meshStandardMaterial color="#3d4148" roughness={0.4} metalness={0.7} />
         </mesh>
       ))}
-      <Html position={[0, 1.1, 0]} center zIndexRange={[4, 0]}>
+      <Label position={[0, 1.1, 0]} zIndex={4}>
         <div ref={label} className="test-tag">3 × 50 t</div>
-      </Html>
+      </Label>
     </group>
   );
 }
